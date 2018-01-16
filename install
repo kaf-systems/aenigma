@@ -3,6 +3,11 @@
 set -e
 set -u
 
+# Source local functions file
+
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. $script_dir/functions
+
 r=$(tput setaf 1)
 g=$(tput setaf 2)
 l=$(tput setaf 4)
@@ -2081,9 +2086,11 @@ echo
 set +e
 if apt-get -y upgrade
 then
+	echo
 	echo "${g}${b}All APT package installations completed successfully...${x}"
 	echo
 else
+	echo
 	echo "${r}${b}An error has occured during APT operations.${x}"
 	echo
 	echo "${b}This was the last step in this installation, so it's possible your end result is at least partially working.${x}"
@@ -2091,9 +2098,9 @@ else
 	echo "${b}Please review the above log and try running the installation again. If necessary open an issue on github. Thank you.${x}"
 	echo
 	read -rp "${b}[press enter to continue reading...]${x}"
-	clear
 fi
 set -e
+clear
 
 
 echo "${g}${b}You can finally log in:${x}"

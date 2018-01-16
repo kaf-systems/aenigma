@@ -1,3 +1,5 @@
+#!/bin/bash
+
 aenigma-add_ejabberd_repo() {
 
         currdistro="$(lsb_release --codename | cut -f2)"

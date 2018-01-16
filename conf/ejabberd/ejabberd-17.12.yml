@@ -12,15 +12,15 @@ log_rotate_date: ""
 log_rotate_count: 1
 log_rate_limit: 100
 
-# watchdog_admins:
-#  - "admin@example.im"
-
 ## net_ticktime: 60
 
 hosts:
   - "example.im"
 
 ## route_subdomains: s2s
+
+certfiles:
+  - "/etc/ssl/aenigma/*.pem"
 
 ### aenigma notice
 ### to enable state-of-the-art, NOT backwards-compatible TLS encryption
