@@ -1,5 +1,57 @@
 #!/bin/bash
 
+################################################################################
+
+check_root() {
+
+	if [[ $EUID -ne 0 ]]
+	then
+		echo "${r}${b}This script must be run as root${x}"
+		echo
+	        echo "${b}Exiting...${x}"
+	        echo
+	        exit 1
+	fi
+
+}
+
+download_os_functions() {
+
+	base_dir=/root/openspace42
+	clone_name=bash_functions
+	clone_dir=$base_dir/$clone_name
+	if [ -d $clone_dir ]
+	then
+		rm -r ${clone_dir:?}
+	fi
+	mkdir -p $base_dir
+	( cd $base_dir && git clone https://github.com/openspace42/$clone_name &> /dev/null )
+
+}
+
+source_os_functions() {
+
+	for f in /root/openspace42/bash_functions/*
+	do
+		. $f
+	done
+
+}
+
+################################################################################
+
+define_vars() {
+
+	proj_name="EasyEngine-Backup-Restore"
+	short_name="ee-br"
+	author_name="openspace42"
+
+	os-define_vars
+
+}
+
+################################################################################
+
 aenigma-add_ejabberd_repo() {
 
         currdistro="$(lsb_release --codename | cut -f2)"
