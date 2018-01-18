@@ -2,9 +2,9 @@
 
 ## v0.47 [currently in beta - 2018-01-16]
 
-1. Added testing mode for Ubuntu 17.10 [artful] [and therefore - currently - ejabberd 17.12 as per the repo we use] to prepare for Ubuntu 18.04 and ejabberd 18.xx:
+1. Added testing mode for Ubuntu 17.10 [artful] [and therefore - currently - ejabberd 18.01 as per the repo we use] to prepare for Ubuntu 18.04 and ejabberd 18.xx:
 1.1: Re-introduced per-ejabberd-version ejabberd.yml config files [falls back to v17.08 config file if ejabberd version being installed doesn't have a version-specific aenigma config file]
-1.2: Enabled mod_push in ejabberd.yml for versions 17.12 and later
+1.2: Enabled mod_push in ejabberd.yml for versions 18.01 and later
 1.3: Requires user to place any external TLS certificate for $domain inside the aenigma /etc/ssl/aenigma TLS certificates folder as other arbitrary directories are blocked in newer versions.
 
 2. Added use of git versioning following [EasyEngine-Backup-Restore](https://github.com/openspace42/EasyEngine-Backup-Restore). The old installer.sh is now called "setup" and the old installer-v0.xx is now simply called "install".

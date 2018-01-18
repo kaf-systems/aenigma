@@ -22,7 +22,7 @@ aenigma-install_ejabberd_config() {
         if [ ! -f $source_ejab_conf_file ]
         then
                 ### Fallback to ejabberd.yml for v17.08 in case the ejabberd candidate install version isn't among the ones we have config files for
-                source_ejab_conf_file="$sourcedir/conf/ejabberd/ejabberd-$ejab_cand_vers.yml"
+                source_ejab_conf_file="$sourcedir/conf/ejabberd/ejabberd-17.08.yml"
         fi
 
         mkdir -p /etc/ejabberd/
