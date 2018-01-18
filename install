@@ -54,6 +54,130 @@ os-check_dfbs_run
 
 ################################################################################
 
+if [ -d $conf_dir ]
+then
+	prev_install=y
+	echo "${g}${b}Found a previous install of aenigma.${x}"
+	echo
+	read -rp "${b}Skip the introduction on XMPP basics? (Y/n): ${x}" -n 1
+	echo
+	if [[ ! $REPLY =~ ^[Nn]$ ]]
+	then
+		echo "${b}Ok, continuing...${x}"
+		echo
+		skip_intro=y
+	else
+		echo
+		skip_intro=n
+	fi
+else
+	mkdir -p $conf_dir
+	prev_install=n
+	skip_intro=n
+fi
+
+### If we're not installing a bleeding_edge version, ensure there's no later version already installed
+
+if [ ! -z "${latest_vers-}" ]
+then
+
+	if [ -f $conf_dir/installed_vers ]
+	then
+		prev_vers="$(cat $conf_dir/installed_vers)"
+		if (( $(echo "$latest_vers < $prev_vers" | bc -l) ))
+		then
+	        	echo "${r}${b}You have previously installed a newer version of aenigma.${x}"
+			echo
+			echo "${b}You likely recently opted out of beta versions. If so, please re-enable beta versions until the next version's stable release.${x}"
+			echo
+			echo "${b}Exiting...${x}"
+			echo
+			exit
+		else
+			echo "$latest_vers" > "$conf_dir"/installed_vers
+		fi
+	else
+		prev_vers=null
+		touch $conf_dir/installed_vers
+		echo "$latest_vers" > $conf_dir/installed_vers
+	fi
+
+fi
+
+### Alert for previous incomplete install
+
+incomplete_install=n
+
+if [ ! $prev_vers = "null" ]
+then
+	if [ ! -f $conf_dir/installcomplete ]
+	then
+		incomplete_install=y
+	else
+		lastcompleteinstallvers="$(cat $conf_dir/installcomplete)"
+		if [ "$lastcompleteinstallvers" != "$prev_vers" ]
+		then
+			incomplete_install=y
+		fi
+	fi
+fi
+
+if [ $incomplete_install = "y" ]
+then
+	clear
+	echo "${r}${b}It appears you have a previous incomplete installation of $short_name.${x}"
+	echo
+	echo "${b}Either you intentionally aborted the install or the script got somehow terminated before it finished.${x}"
+	echo
+	echo "${b}In the latter case, it is possible something unforseen might go wrong during this install. If so, simply file an issue report at:${x}"
+	echo
+	echo "${b} | https://github.com/$author_name/$short_name/issues | ${x}"
+	echo
+	echo "${b}Thank you in advance!${x}"
+	echo
+	read -rp "${b}[press enter to continue reading...]${x}"
+	clear
+fi
+
+### Alert in case of reinstall
+
+if [ ! $prev_vers = "null" ]
+then
+
+	echo "${b}You're now re-running the $short_name installer.${x}"
+	echo
+	echo "${g}${b}This is perfectly fine as $short_name is meant to be re-installed as many times as you'd like [also to update your current installation].${x}"
+	echo
+	echo "${r}${b}Keep in mind though that all customizations external to $short_name you might have made will be permanently deleted.${x}"
+	echo
+	echo "${b}This is because the installation script goes through every configuration and sets the default values, with no regard to any anomaly it finds.${x}"
+	echo
+	echo "${r}${b}If you want to save any customizations you have made, exit this script and do so now.${x}"
+	echo
+	read -rp "${b}[press enter to continue reading...]${x}"
+	clear
+
+	echo "${b}It's highly recommended to run one last, fully automated backup before you proceed with the aenigma installer re-run.${x}"
+	echo
+	read -rp "${b}Do you want to run the backup now [without exiting this script] (Y/n): ${x}" -n 1
+	echo
+	if [[ ! $REPLY =~ ^[Nn]$ ]]
+	then
+		echo "${b}Ok, proceeding with backup...${x}"
+		bash $sourcedir/tools/$short_name-backup
+		echo
+		echo "${b}Backup complete. Continuing installation...${x}"
+		echo
+	else
+		echo
+		echo "${b}Ok, skipping backup...${x}"
+		echo
+	fi
+
+fi
+
+################################################################################
+
 echo "${b}Initiating installer...${x}"
 echo
 
@@ -71,162 +195,12 @@ echo
 echo "${b}Finished installing dependencies.${x}"
 echo
 
-filename=$(basename "$0")
-currvers="$(echo "${filename//installer-v/}")"
+mkdir -p $tls_dir
+mkdir -p $tmp_dir
 
-echo "${b}aenigma v$currvers${x}"
-echo
+################################################################################
 
-# Don't change these! | No trailing slash!
-projname="aenigma"
-shortname=$projname
-sourcedir=/root/$projname
-basedir=/root/openspace42
-installdir=$basedir/$shortname
-backupsdir=$installdir/backups
-archivedir=$backupsdir/archive
-latestdir=$backupsdir/latest
-restoresdir=$installdir/restores
-tmpdir=/tmp/$shortname
-configdir=$installdir/config
-toolsdir=$installdir/tools
-tlsdir=/etc/ssl/$shortname
-
-
-
-mkdir -p $basedir
-mkdir -p $tlsdir
-mkdir -p $tmpdir
-
-
-
-if [ -d $configdir ]
-then
-	previnstall=y
-	echo "${g}${b}Found a previous install of aenigma.${x}"
-	echo
-	read -rp "${b}Skip the introduction on XMPP basics? (Y/n): ${x}" -n 1
-	echo
-	if [[ ! $REPLY =~ ^[Nn]$ ]]
-	then
-		echo "${b}Ok, continuing...${x}"
-		echo
-		skipintro=y
-	else
-		echo
-		skipintro=n
-	fi
-else
-	mkdir -p $configdir
-	previnstall=n
-	skipintro=n
-fi
-
-
-
-if [ -f $configdir/installedvers ]
-then
-	prevvers="$(cat $configdir/installedvers)"
-	if (( $(echo "$currvers < $prevvers" | bc -l) ))
-	then
-        	echo "${r}${b}You have previously installed a newer version of aenigma.${x}"
-		echo
-		echo "${b}You likely recently opted out of beta versions. If so, please re-enable beta versions until the next version's stable release.${x}"
-		echo
-		echo "${b}Exiting...${x}"
-		echo
-		exit
-	else
-		echo "$currvers" > "$configdir"/installedvers
-	fi
-else
-	prevvers=null
-	touch $configdir/installedvers
-	echo "$currvers" > $configdir/installedvers
-fi
-
-
-
-### Alert for previous incomplete install [only from v0.46 onward, since the complete installation signaling was implemented in v0.45]
-
-incompleteinstall=n
-
-if [ ! $prevvers = "null" ]
-then
-	if (( $(echo "$prevvers > 0.45" | bc -l) ))
-	then
-		if [ ! -f $configdir/installcomplete ]
-		then
-			incompleteinstall=y
-		else
-			lastcompleteinstallvers="$(cat $configdir/installcomplete)"
-			if [ "$lastcompleteinstallvers" != "$prevvers" ]
-			then
-				incompleteinstall=y
-			fi
-		fi
-	fi
-fi
-
-if [ $incompleteinstall = "y" ]
-then
-	clear
-	echo "${r}${b}It appears you have a previous incomplete installation of aenigma.${x}"
-	echo
-	echo "${b}Either you intentionally aborted the install or the script got somehow terminated before it finished.${x}"
-	echo
-	echo "${b}In the latter case, it is possible something unforseen might go wrong during this install. If so, simply file an issue report at:${x}"
-	echo
-	echo "${b} | https://github.com/openspace42/aenigma/issues | ${x}"
-	echo
-	echo "${b}Thank you in advance!${x}"
-	echo
-	read -rp "${b}[press enter to continue reading...]${x}"
-	clear
-fi
-
-
-
-### Alert in case of reinstall
-
-if [ ! $prevvers = "null" ]
-then
-
-	echo "${b}You're now re-running the aenigma installer.${x}"
-	echo
-	echo "${g}${b}This is perfectly fine as aenigma is meant to be re-installed as many times as you'd like [also to update your current installation].${x}"
-	echo
-	echo "${r}${b}Keep in mind though that all customizations external to aenigma you might have made will be permanently deleted.${x}"
-	echo
-	echo "${b}This is because the installation script goes through every configuration and sets the default values, with no regard to any anomaly it finds.${x}"
-	echo
-	echo "${r}${b}If you want to save any customizations you have made, exit this script and do so now.${x}"
-	echo
-	read -rp "${b}[press enter to continue reading...]${x}"
-	clear
-
-	echo "${b}It's highly recommended to run one last, fully automated backup before you proceed with the aenigma installer re-run.${x}"
-	echo
-	read -rp "${b}Do you want to run the backup now [without exiting this script] (Y/n): ${x}" -n 1
-	echo
-	if [[ ! $REPLY =~ ^[Nn]$ ]]
-	then
-		echo "${b}Ok, proceeding with backup...${x}"
-		bash $sourcedir/tools/aenigma-backup
-		echo
-		echo "${b}Backup complete. Continuing installation...${x}"
-		echo
-	else
-		echo
-		echo "${b}Ok, skipping backup...${x}"
-		echo
-	fi
-
-fi
-
-
-
-if [ $skipintro = "n" ]
+if [ $skip_intro = "n" ]
 then
 
 	echo "0] First of all, a little introduction on how XMPP actually works"
@@ -290,42 +264,40 @@ then
 
 fi
 
-
-
-if [ -f $configdir/configoption ]
+if [ -f $conf_dir/config_option ]
 then
-	prevconfigoption="$(cat $configdir/configoption)"
-	case "$prevconfigoption" in
+	prevconfig_option="$(cat $conf_dir/config_option)"
+	case "$prevconfig_option" in
 	    1|2|3)
-		validprevconfigoption=y
+		validprevconfig_option=y
 		;;
 	    *)
-		validprevconfigoption=n
+		validprevconfig_option=n
 		;;
 	esac
 else
-	touch $configdir/configoption
-	validprevconfigoption=n
+	touch $conf_dir/config_option
+	validprevconfig_option=n
 fi
 
-if [ $validprevconfigoption = "y" ]
+if [ $validprevconfig_option = "y" ]
 then
-	echo "${g}${b}You previously chose configuration option | $prevconfigoption | ${x}"
+	echo "${g}${b}You previously chose configuration option | $prevconfig_option | ${x}"
 	echo
 	read -rp "${b}Keep this option for this installation as well? (Y/n): ${x}" -n 1
 	echo
 	if [[ ! $REPLY =~ ^[Nn]$ ]]
 	then
-		configoption=$prevconfigoption
+		config_option=$prevconfig_option
 	else
 		echo
-		configoption=notyetset
+		config_option=notyetset
 	fi
 else
-	configoption=notyetset
+	config_option=notyetset
 fi
 
-if [ $configoption = "notyetset" ]
+if [ $config_option = "notyetset" ]
 then
 	choice="${b}Please select your desired configuration option: ${x}"
 	echo "$choice"
@@ -335,18 +307,18 @@ then
 	    echo
 	    case $opt in
 		"configuration 1")
-		    echo "1" > $configdir/configoption
-		    configoption=1
+		    echo "1" > $conf_dir/config_option
+		    config_option=1
 		    break
 		    ;;
 		"configuration 2")
-		    echo "2" > $configdir/configoption
-		    configoption=2
+		    echo "2" > $conf_dir/config_option
+		    config_option=2
 		    break
 		    ;;
 		"configuration 3")
-		    echo "3" > $configdir/configoption
-		    configoption=3
+		    echo "3" > $conf_dir/config_option
+		    config_option=3
 		    break
 		    ;;
 		"exit")
@@ -363,19 +335,19 @@ fi
 
 
 
-if [ -f $configdir/domain ]
+if [ -f $conf_dir/domain ]
 then
-	prevdomain="$(cat $configdir/domain)"
+	prevdomain="$(cat $conf_dir/domain)"
 	changedomainwarning=y
 else
 	prevdomain="nx"
 	changedomainwarning=n
 fi
 
-if [ ! $configoption = "3" ]
+if [ ! $config_option = "3" ]
 then
 
-	echo "${b}Ok, you've chosen option $configoption.${x}"
+	echo "${b}Ok, you've chosen option $config_option.${x}"
 	echo
 	if [ ! $prevdomain = "nx" ]
 	then
@@ -480,10 +452,10 @@ then
 					esac
 				done
 			done
-			echo "$newdomain" > "$configdir"/domain
+			echo "$newdomain" > "$conf_dir"/domain
 			echo "${b}New domain set to | $newdomain | ${x}"
 			echo
-			domain="$(cat $configdir/domain)"
+			domain="$(cat $conf_dir/domain)"
 		else
 			domain=$prevdomain
 			echo "${b}Aborting domain change. Keeping old domain | $domain | ${x}"
@@ -505,14 +477,14 @@ fi
 
 currhostname="$(cat /etc/hostname)"
 
-if [ ! $configoption = "2" ]
+if [ ! $config_option = "2" ]
 then
 
-	if [ $configoption = "1" ]
+	if [ $config_option = "1" ]
 	then
 		echo "${b}Your hostname must be a third level domain [subdomain] of either $domain or another domain.${x}"
 		echo
-	elif [ $configoption = "3" ]
+	elif [ $config_option = "3" ]
 	then
 		echo "${b}Your hostname must be a third level domain [subdomain] of your main domain.${x}"
 		echo
@@ -523,7 +495,7 @@ then
 	echo " | $currhostname |"
 	echo
 
-	if [ $configoption = "3" ]
+	if [ $config_option = "3" ]
 	then
 		echo "${b}Make sure it is a subdomain of your main domain, and is it what you want it to be.${x}"
 		echo
@@ -552,11 +524,11 @@ then
 			newhostname=""
 			until [ ! $newhostname = "" ]
 			do
-				if [ $configoption = "1" ]
+				if [ $config_option = "1" ]
 				then
 					read -rp "${b}Now set your hostname, which must be a third level domain [subdomain] of either $domain or another domain: ${x}" newhostname
 					echo
-				elif [ $configoption = "3" ]
+				elif [ $config_option = "3" ]
 				then
 					echo "${b}Keep in mind that your hostname will also become your domain [the part after the @ in your XMPP account addresses].${x}"
 					echo
@@ -608,7 +580,7 @@ then
 		hostname="$(cat /etc/hostname)"
 	fi
 
-	if [ $configoption = "3" ]
+	if [ $config_option = "3" ]
 	then
 		domain=$hostname
 	fi
@@ -683,8 +655,8 @@ if [[ ! $REPLY =~ ^[Nn]$ ]]
 then
 	echo "${b}Ok, continuing.${x}"
 	echo
-	touch $configdir/domain
-	echo "$domain" > $configdir/domain
+	touch $conf_dir/domain
+	echo "$domain" > $conf_dir/domain
 else
 	echo
 	echo "${b}Ok, no worries. You can re-run this script right now and make the correct choices. Exiting...${x}"
@@ -698,16 +670,16 @@ clear
 echo "${b}Aenigma sends you email notifications for any runtime errors or failures.${x}"
 echo
 
-if [ -f $configdir/adminmail ]
+if [ -f $conf_dir/adminmail ]
 then
-	prevadminmail="$(cat $configdir/adminmail)"
+	prevadminmail="$(cat $conf_dir/adminmail)"
 
 	### Perform any future email address validation here and return validprevadminmail=[y/n].
 	### Now defaulting to y.
 
 	validprevadminmail=y
 else
-	touch $configdir/adminmail
+	touch $conf_dir/adminmail
 	validprevadminmail=n
 fi
 
@@ -779,10 +751,10 @@ then
 			esac
 		done
 	done
-	echo "$newadminmail" > "$configdir"/adminmail
+	echo "$newadminmail" > "$conf_dir"/adminmail
 	echo "${b}New admin email address set to | $newadminmail | ${x}"
 	echo
-	adminmail="$(cat $configdir/adminmail)"
+	adminmail="$(cat $conf_dir/adminmail)"
 fi
 clear
 
@@ -838,15 +810,15 @@ clear
 
 addTLSmode="notset"
 
-if [ $configoption = 1 ]
+if [ $config_option = 1 ]
 then
 
 	echo "${b}Having chosen config option 1, now it's time to set up the TLS [SSL] certificate that is valid for $domain on this machine.${x}"
 	echo
 
-	if [ -f $configdir/addTLSmode ]
+	if [ -f $conf_dir/addTLSmode ]
 	then
-		prevaddTLSmode="$(cat $configdir/addTLSmode)"
+		prevaddTLSmode="$(cat $conf_dir/addTLSmode)"
 		case "$prevaddTLSmode" in
 		    "elsewhere"|"here")
 			validprevaddTLSmode=y
@@ -856,7 +828,7 @@ then
 			;;
 		esac
 	else
-		touch $configdir/addTLSmode
+		touch $conf_dir/addTLSmode
 		validprevaddTLSmode=n
 	fi
 
@@ -955,7 +927,7 @@ then
 			fi
 
 			addTLSmode="elsewhere"
-			echo "elsewhere" > $configdir/addTLSmode
+			echo "elsewhere" > $conf_dir/addTLSmode
 
 		else
 
@@ -981,7 +953,7 @@ then
 			echo
 
 			addTLSmode="here"
-			echo "here" > $configdir/addTLSmode
+			echo "here" > $conf_dir/addTLSmode
 
 		fi
 
@@ -1023,7 +995,7 @@ then
 
 		chmod 700 "$tlsdir/$domain.pem"
 		domtlscertloc="$tlsdir/$domain.pem"
-		echo "$domtlscertloc" > "$configdir/domtlscertloc"
+		echo "$domtlscertloc" > "$conf_dir/domtlscertloc"
 
 	fi
 
@@ -1035,9 +1007,9 @@ clear
 echo "${b}Aenigma makes daily backups of this server's ejabberd database and files.${x}"
 echo
 
-if [ -f $configdir/backuptype ]
+if [ -f $conf_dir/backuptype ]
 then
-	prevbackuptype="$(cat $configdir/backuptype)"
+	prevbackuptype="$(cat $conf_dir/backuptype)"
 	case "$prevbackuptype" in
 	    local|s3)
 		validprevbackuptype=y
@@ -1047,7 +1019,7 @@ then
 		;;
 	esac
 else
-	touch $configdir/backuptype
+	touch $conf_dir/backuptype
 	validprevbackuptype=n
 fi
 
@@ -1091,7 +1063,7 @@ then
 			echo "${b}Ok, so let's set up your S3 file storage server settings now.${x}"
 			echo
 			backuptype=s3
-			echo "s3" > $configdir/backuptype
+			echo "s3" > $conf_dir/backuptype
 			echo  "${r}${b}If you're setting up this machine to restore a previous aenigma installation from another machine, you must specify so now.${x}"
 			echo
 			echo "${b}Selecting yes at the next prompt will block ALL backups to S3 to avoid overwriting previous valid backups on S3 and give you a chance to restore them on this machine.${x}"
@@ -1105,7 +1077,7 @@ then
 				echo "${r}${b}Ok, blocking ALL backups to S3 until a restore is performed. Do so right after you're finished running this install script.${x}"
 				echo
 				restoreintent=y
-				touch $configdir/blocks3backups
+				touch $conf_dir/blocks3backups
 			else
 				echo "${b}NOT selected restore mode, will allow S3 backups..."
 				echo
@@ -1116,14 +1088,14 @@ then
 			echo "${b}Keeping backups local for now [simply re-run this installation when you're ready to upgrade your backups to S3 enabled].${x}"
 			echo
 			backuptype=local
-			echo "local" > $configdir/backuptype
+			echo "local" > $conf_dir/backuptype
 		fi
 	else
 		echo
 		echo "${b}Ok, keeping backups local. Remember to periodically copy your backups from $backupsdir over to another machine!${x}"
 		echo
 		backuptype=local
-		echo "local" > $configdir/backuptype
+		echo "local" > $conf_dir/backuptype
 		sleep 3
 	fi
 fi
@@ -1139,7 +1111,7 @@ then
 	until [ $s3accepted = "y" ]
 	do
 
-		mkdir -p $configdir/s3/
+		mkdir -p $conf_dir/s3/
 
 		declare -A s3array=(
 			[awsaki]="AWS Access Key ID"
@@ -1150,9 +1122,9 @@ then
 
 		for i in "${!s3array[@]}"
 		do
-			if [ -f "$configdir"/s3/"$i" ]
+			if [ -f "$conf_dir"/s3/"$i" ]
 			then
-				prevs3var="$(cat "$configdir"/s3/"$i")"
+				prevs3var="$(cat "$conf_dir"/s3/"$i")"
 				echo "${g}${b}You previously set your ${s3array[$i]} to be: | $prevs3var | ${x}"
 				echo
 				read -rp "${b}is this still correct? (Y/n): ${x}" -n 1
@@ -1221,14 +1193,14 @@ then
 				done
 				echo "${b}${s3array[$i]} set to | $news3var | ${x}"
 				echo
-				echo "$news3var" > "$configdir"/s3/"$i"
+				echo "$news3var" > "$conf_dir"/s3/"$i"
 			fi
 		done
 
-		awsaki="$(cat $configdir/s3/awsaki)"
-		awssak="$(cat $configdir/s3/awssak)"
-		s3endpoint="$(cat $configdir/s3/s3endpoint)"
-		s3bucketname="$(cat $configdir/s3/s3bucketname)"
+		awsaki="$(cat $conf_dir/s3/awsaki)"
+		awssak="$(cat $conf_dir/s3/awssak)"
+		s3endpoint="$(cat $conf_dir/s3/s3endpoint)"
+		s3bucketname="$(cat $conf_dir/s3/s3bucketname)"
 
 		echo "----------------"
 		echo
@@ -1288,7 +1260,7 @@ then
 					echo "${b}Ok, skipping S3 setup and REMOVING s3 setting from aenigma...${x}"
 					echo
 					backuptype=local
-					echo "local" > $configdir/backuptype
+					echo "local" > $conf_dir/backuptype
 					read -rp "${b}[press enter to continue reading...]${x}"
 					clear
 				fi
@@ -1365,18 +1337,18 @@ then
 			done
 			echo "${b}Ok, using | $newbackupspw | as your S3 backups encryption passphrase.${x}"
 			echo
-			echo "$newbackupspw" > "$configdir"/backupspw
+			echo "$newbackupspw" > "$conf_dir"/backupspw
 			backupspw=$newbackupspw
 
 		else
 
 			echo "${b}Ok, blocking S3 restores until you manually specify your old S3 backups encryption passphrase here:${x}"
 			echo
-			echo "${b} | $configdir/backupspw | ${x}"
+			echo "${b} | $conf_dir/backupspw | ${x}"
 			echo
 			echo "${b}If you've lost your encryption passphrase, your S3 backups are also lost. Look for a local backup you might have from your old machine to restore your previous instance.${x}"
 			echo
-			touch $configdir/blocks3restores
+			touch $conf_dir/blocks3restores
 			read -rp "${b}[press enter to continue reading...]${x}"
 			clear
 
@@ -1384,17 +1356,17 @@ then
 
 	else
 
-		if [ ! -f $configdir/backupspw ]
+		if [ ! -f $conf_dir/backupspw ]
 		then
-			touch $configdir/backupspw
-			chmod 700 $configdir/backupspw
+			touch $conf_dir/backupspw
+			chmod 700 $conf_dir/backupspw
 			generatedpw="$(pwgen 42 1)"
-			echo "$generatedpw" > "$configdir"/backupspw
+			echo "$generatedpw" > "$conf_dir"/backupspw
 		else
-			chmod 700 $configdir/backupspw # In case someone accidentally modified permissions on $configdir
+			chmod 700 $conf_dir/backupspw # In case someone accidentally modified permissions on $conf_dir
 		fi
 
-		backupspw="$(cat $configdir/backupspw)"
+		backupspw="$(cat $conf_dir/backupspw)"
 
 		echo "${b}Your S3 backups encryption passphrase is:${x}"
 		echo
@@ -2089,7 +2061,7 @@ echo "${b}Finished registering ejabberd admin user.${x}"
 echo
 clear
 
-if [ -f $configdir/ejabberdadminpwset ]
+if [ -f $conf_dir/ejabberdadminpwset ]
 then
 	read -rp "${b}Leave ejabberd admin user password the same as previously set? (Y/n): ${x}" -n 1
 	echo
@@ -2106,7 +2078,7 @@ then
 		ejbdadminpwreset=y
 	fi
 else
-	touch $configdir/ejabberdadminpwset
+	touch $conf_dir/ejabberdadminpwset
 	ejbdadminpwreset=y
 fi
 
@@ -2177,8 +2149,8 @@ clear
 
 
 
-touch $configdir/installcomplete
-echo "$currvers" > "$configdir"/installcomplete
+touch $conf_dir/installcomplete
+echo "$latest_vers" > "$conf_dir"/installcomplete
 
 
 
