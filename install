@@ -110,11 +110,11 @@ incomplete_install=n
 
 if [ ! $prev_vers = "null" ]
 then
-	if [ ! -f $conf_dir/installcomplete ]
+	if [ ! -f $conf_dir/install_complete ]
 	then
 		incomplete_install=y
 	else
-		lastcompleteinstallvers="$(cat $conf_dir/installcomplete)"
+		lastcompleteinstallvers="$(cat $conf_dir/install_complete)"
 		if [ "$lastcompleteinstallvers" != "$prev_vers" ]
 		then
 			incomplete_install=y
@@ -556,27 +556,27 @@ then
 	if [ $additional_tls_mode = "elsewhere" ]
 	then
 
-		if [ -f $tlsdir/$domain.pem ]
+		if [ -f $tls_dir/$domain.pem ]
 		then
-			echo "${g}${b}External TLS certificate for $domain found in | $tlsdir/$domain.pem |."
+			echo "${g}${b}External TLS certificate for $domain found in | $tls_dir/$domain.pem |."
 			echo
 		else
-			echo "${b}Now, in whatever way you've installed or copied to this server the all-in-one TLS cert file for $domain, it's time to place it inside the  | $tlsdir | directory named as | $domain.pem |.${x}"
+			echo "${b}Now, in whatever way you've installed or copied to this server the all-in-one TLS cert file for $domain, it's time to place it inside the  | $tls_dir | directory named as | $domain.pem |.${x}"
 			echo
-			echo "${b}Place it there now ensuring its full path is indeed | $tlsdir/$domain.pem |.${x}"
+			echo "${b}Place it there now ensuring its full path is indeed | $tls_dir/$domain.pem |.${x}"
 			echo
 			read -rp "${b}[press enter when ready...]${x}"
 			clear
 			exists=n
 			until [ $exists = "y" ]
 			do
-				if [ -f  $tlsdir/$domain.pem ]
+				if [ -f  $tls_dir/$domain.pem ]
 				then
-					echo "${g}${b}External TLS certificate for $domain found in | $tlsdir/$domain.pem |."
+					echo "${g}${b}External TLS certificate for $domain found in | $tls_dir/$domain.pem |."
 					echo
 					exists=y
 				else
-					echo "${r}${b}External TLS certificate for $domain NOT found in | $tlsdir/$domain.pem |."
+					echo "${r}${b}External TLS certificate for $domain NOT found in | $tls_dir/$domain.pem |."
 					echo
 					echo "${b}Please ensure you've correctly copied the certificate inside the directory and named it as above.${x}"
 					echo
@@ -587,8 +587,8 @@ then
 			done
 		fi
 
-		chmod 700 "$tlsdir/$domain.pem"
-		domtlscertloc="$tlsdir/$domain.pem"
+		chmod 700 "$tls_dir/$domain.pem"
+		domtlscertloc="$tls_dir/$domain.pem"
 		echo "$domtlscertloc" > "$conf_dir/domtlscertloc"
 
 	fi
@@ -598,390 +598,9 @@ clear
 
 ### Setup backup restore
 
+os-setup_backup_restore
 
-
-echo "${b}Aenigma makes daily backups of this server's ejabberd database and files.${x}"
-echo
-
-if [ -f $conf_dir/backuptype ]
-then
-	prevbackuptype="$(cat $conf_dir/backuptype)"
-	case "$prevbackuptype" in
-	    local|s3)
-		validprevbackuptype=y
-		;;
-	    *)
-		validprevbackuptype=n
-		;;
-	esac
-else
-	touch $conf_dir/backuptype
-	validprevbackuptype=n
-fi
-
-if [ $validprevbackuptype = "y" ]
-then
-	echo "${g}${b}You previously chose backup type | $prevbackuptype | ${x}"
-	echo
-	read -rp "${b}Keep this option for this installation as well? (Y/n): ${x}" -n 1
-	echo
-	if [[ ! $REPLY =~ ^[Nn]$ ]]
-	then
-		echo "${b}Ok, keeping | $prevbackuptype | as your backup type${x}"
-		echo
-		backuptype=$prevbackuptype
-	else
-		echo
-		backuptype=not-yet-set
-	fi
-else
-	backuptype=not-yet-set
-fi
-
-restoreintent=n
-
-if [ $backuptype = "not-yet-set" ]
-then
-	echo "${b}Aenigma can perform backups to an S3 file storage server.${x}"
-	echo
-	echo "${b}You must choose to set up S3 now if you're restoring a previous aenigma installation.${x}"
-	echo
-	read -rp "${b}Do you want to set up S3 now? (Y/n): ${x}" -n 1
-	echo
-	if [[ ! $REPLY =~ ^[Nn]$ ]]
-	then
-		echo "${b}Ok, using S3 as backup type.${x}"
-		echo
-		read -rp "${b}Do you have an S3 file storage server already set up? (Y/n): ${x}" -n 1
-		echo
-		if [[ ! $REPLY =~ ^[Nn]$ ]]
-		then
-			echo "${b}Ok, so let's set up your S3 file storage server settings now.${x}"
-			echo
-			backuptype=s3
-			echo "s3" > $conf_dir/backuptype
-			echo  "${r}${b}If you're setting up this machine to restore a previous aenigma installation from another machine, you must specify so now.${x}"
-			echo
-			echo "${b}Selecting yes at the next prompt will block ALL backups to S3 to avoid overwriting previous valid backups on S3 and give you a chance to restore them on this machine.${x}"
-			echo
-			echo "${r}${b}If you choose yes, make sure NOT to use this instance as it is [as it will NOT be backed up on S3] but rather remember to perform the restore right after you're finished running this install script.${x}"
-			echo
-			read -rp "${b}Are you setting up this machine to restore a previous aenigma installation from another machine? (Y/n): ${x}" -n 1
-			echo
-			if [[ ! $REPLY =~ ^[Nn]$ ]]
-			then
-				echo "${r}${b}Ok, blocking ALL backups to S3 until a restore is performed. Do so right after you're finished running this install script.${x}"
-				echo
-				restoreintent=y
-				touch $conf_dir/blocks3backups
-			else
-				echo "${b}NOT selected restore mode, will allow S3 backups..."
-				echo
-			fi
-		else
-			echo "${b}No problem, follow this guide [link will be published here when ready] to configure your S3 file storage server.${x}"
-			echo
-			echo "${b}Keeping backups local for now [simply re-run this installation when you're ready to upgrade your backups to S3 enabled].${x}"
-			echo
-			backuptype=local
-			echo "local" > $conf_dir/backuptype
-		fi
-	else
-		echo
-		echo "${b}Ok, keeping backups local. Remember to periodically copy your backups from $backupsdir over to another machine!${x}"
-		echo
-		backuptype=local
-		echo "local" > $conf_dir/backuptype
-		sleep 3
-	fi
-fi
-clear
-
-
-
-if [ $backuptype = "s3" ]
-then
-
-	s3accepted=n
-
-	until [ $s3accepted = "y" ]
-	do
-
-		mkdir -p $conf_dir/s3/
-
-		declare -A s3array=(
-			[awsaki]="AWS Access Key ID"
-			[awssak]="AWS Secret Access Key"
-			[s3endpoint]="S3 Endpoint URL"
-			[s3bucketname]="S3 Bucket Name"
-		)
-
-		for i in "${!s3array[@]}"
-		do
-			if [ -f "$conf_dir"/s3/"$i" ]
-			then
-				prevs3var="$(cat "$conf_dir"/s3/"$i")"
-				echo "${g}${b}You previously set your ${s3array[$i]} to be: | $prevs3var | ${x}"
-				echo
-				read -rp "${b}is this still correct? (Y/n): ${x}" -n 1
-				echo
-				if [[ ! $REPLY =~ ^[Nn]$ ]]
-				then
-					echo "${b}Ok, keeping | $prevs3var | as your ${s3array[$i]}${x}"
-					echo
-					news3var=$prevs3var
-				else
-					echo
-					news3var=not-yet-set
-				fi
-			else
-				news3var=not-yet-set
-			fi
-
-			if [ $news3var = "not-yet-set" ]
-			then
-				defined=n
-				until [ $defined = "y" ]
-				do
-					news3var=""
-					until [ ! $news3var = "" ]
-					do
-						read -rp "${b}Now set your ${s3array[$i]}${x}: " news3var
-						echo
-					done
-					valid=n
-					until [ $valid = "y" ]
-					do
-						read -n 1 -rp "${b}Is | $news3var | correct? (Y/n/e[xit]) ${x}" answer;
-						case $answer in
-						"")
-							echo
-							valid=y
-							defined=y
-							;;
-						y)
-							echo -e "\\n"
-							valid=y
-							defined=y
-							;;
-						n)
-							echo -e "\\n"
-							echo "${b}Ok, then please try again...${x}"
-							echo
-							valid=y
-							defined=n
-							;;
-						e)
-							echo -e "\\n"
-							echo "${b}Exiting...${x}"
-							echo
-							exit
-							;;
-						*)
-							echo -e "\\n"
-							echo "${r}${b}Invalid option. Retry...${x}"
-							echo
-							valid=n
-							defined=n
-							;;
-						esac
-					done
-				done
-				echo "${b}${s3array[$i]} set to | $news3var | ${x}"
-				echo
-				echo "$news3var" > "$conf_dir"/s3/"$i"
-			fi
-		done
-
-		awsaki="$(cat $conf_dir/s3/awsaki)"
-		awssak="$(cat $conf_dir/s3/awssak)"
-		s3endpoint="$(cat $conf_dir/s3/s3endpoint)"
-		s3bucketname="$(cat $conf_dir/s3/s3bucketname)"
-
-		echo "----------------"
-		echo
-		echo "${b}To make sure everything is correct:${x}"
-		echo
-		echo "1] Your ${b}AWS Access Key ID${x} will be:"
-		echo
-		echo "${b} | $awsaki | ${x}"
-		echo
-		echo "2] Your ${b}AWS Secret Access Key${x} will be:"
-		echo
-		echo "${b} | $awssak | ${x}"
-		echo
-		echo "3] Your ${b}S3 Endpoint URL${x} will be:"
-		echo
-		echo "${b} | $s3endpoint | ${x}"
-		echo
-		echo "4] Your ${b}S3 Bucket Name${x} will be:"
-		echo
-		echo "${b} | $s3bucketname | ${x}"
-		echo
-		echo "----------------"
-		echo
-
-		read -rp "${b}Does everything look all right? (Y/n): ${x}" -n 1
-		echo
-		if [[ ! $REPLY =~ ^[Nn]$ ]]
-		then
-
-			echo "${b}Ok, proceeding to check S3 connection details${x}."
-			echo
-
-			### Check S3 connection
-
-			s3cmd --configure --access_key="$awsaki" --secret_key="$awssak" --host="$s3endpoint" -s --no-encrypt --dump-config 2>&1 | tee /root/.s3cfg &> /dev/null
-			set +e
-			s3cmd info s3://"$s3bucketname" >/dev/null 2>&1
-
-			if [[ $? -eq 0 ]]; then
-				echo "${g}${b}S3 connection details appear to be valid.${x}"
-				echo
-				s3accepted=y
-				sleep 1
-			else
-				echo "${r}${b}S3 connection details do NOT appear to be valid.${x}"
-				echo
-				read -rp "${b}Would you like to try setting it up again? (Y/n): ${x}" -n 1
-			    	echo
-			    	if [[ ! $REPLY =~ ^[Nn]$ ]]
-			    	then
-					s3accepted=n
-					echo "${b}Ok, repeating S3 setup...${x}"
-					echo
-				else
-					s3accepted=y
-					echo
-					echo "${b}Ok, skipping S3 setup and REMOVING s3 setting from aenigma...${x}"
-					echo
-					backuptype=local
-					echo "local" > $conf_dir/backuptype
-					read -rp "${b}[press enter to continue reading...]${x}"
-					clear
-				fi
-			fi
-			set -e
-
-		else
-			s3accepted=n
-			echo
-			echo "${b}Ok, repeating S3 setup...${x}"
-			echo
-		fi
-
-	done
-	clear
-
-	if [ $restoreintent = "y" ]
-	then
-		echo "${b}You previously set up S3 and also specified that you're setting up this machine to restore a previous aenigma installation from another machine.${x}"
-		echo
-		echo "${b}If you intend to restore from S3 you must have your encryption passphrase handy now as you were reminded upon initial installation on your old machine.${x}"
-		echo
-		read -rp "${b}Do you have your S3 encryption passphrase ready to specify now? (Y/n): ${x}" -n 1
-		echo
-		if [[ ! $REPLY =~ ^[Nn]$ ]]
-		then
-
-			defined=n
-			until [ $defined = "y" ]
-			do
-				newbackupspw=""
-				until [ ! $newbackupspw = "" ]
-				do
-					read -rp "${b}Ok, paste your S3 encryption passphrase here: " newbackupspw
-					echo
-				done
-				valid=n
-				until [ $valid = "y" ]
-				do
-					read -n 1 -rp "${b}Is | $newbackupspw | correct? (Y/n/e[xit]) ${x}" answer;
-					case $answer in
-					"")
-						echo
-						valid=y
-						defined=y
-						;;
-					y)
-						echo -e "\\n"
-						valid=y
-						defined=y
-						;;
-					n)
-						echo -e "\\n"
-						echo "${b}Ok, then please try again...${x}"
-						echo
-						valid=y
-						defined=n
-						;;
-					e)
-						echo -e "\\n"
-						echo "${b}Exiting...${x}"
-						echo
-						exit
-						;;
-					*)
-						echo -e "\\n"
-						echo "${r}${b}Invalid option. Retry...${x}"
-						echo
-						valid=n
-						defined=n
-						;;
-					esac
-				done
-			done
-			echo "${b}Ok, using | $newbackupspw | as your S3 backups encryption passphrase.${x}"
-			echo
-			echo "$newbackupspw" > "$conf_dir"/backupspw
-			backupspw=$newbackupspw
-
-		else
-
-			echo "${b}Ok, blocking S3 restores until you manually specify your old S3 backups encryption passphrase here:${x}"
-			echo
-			echo "${b} | $conf_dir/backupspw | ${x}"
-			echo
-			echo "${b}If you've lost your encryption passphrase, your S3 backups are also lost. Look for a local backup you might have from your old machine to restore your previous instance.${x}"
-			echo
-			touch $conf_dir/blocks3restores
-			read -rp "${b}[press enter to continue reading...]${x}"
-			clear
-
-		fi
-
-	else
-
-		if [ ! -f $conf_dir/backupspw ]
-		then
-			touch $conf_dir/backupspw
-			chmod 700 $conf_dir/backupspw
-			generatedpw="$(pwgen 42 1)"
-			echo "$generatedpw" > "$conf_dir"/backupspw
-		else
-			chmod 700 $conf_dir/backupspw # In case someone accidentally modified permissions on $conf_dir
-		fi
-
-		backupspw="$(cat $conf_dir/backupspw)"
-
-		echo "${b}Your S3 backups encryption passphrase is:${x}"
-		echo
-		echo "${g}${b} | $backupspw | ${x}"
-		echo
-		echo "${b}Make sure you keep it saved in a safe location OUTSIDE of this machine and NOT on the S3 file storage server.${x}"
-		echo
-		echo "${r}${b}You will NOT be able to restore ANY backup without this passphrase.${x}"
-		echo
-		echo "${b}This is your only chance to save this passphrase. If you don't do it now and this machine's data is lost, so will be your backups.${x}"
-		echo
-		read -rp "${b}[press enter to continue reading...]${x}"
-		clear
-
-	fi
-
-fi
-
-
+### Perform DNS checks
 
 if [ $additional_tls_mode = "here" ]
 then
@@ -1276,6 +895,8 @@ do
 done
 clear
 
+### Set UFW rules
+
 echo "${b}Now setting UFW rules...${x}"
 echo
 
@@ -1290,15 +911,23 @@ echo
 echo "${b}Finished setting UFW rules.${x}"
 echo
 
+### Install and if necessary upgrade EasyEngine
+
 echo "${b}Now installing easyengine...${x}"
 echo
 wget -qO ee rt.cx/ee
 bash ee || true
 rm ee
 source /etc/bash_completion.d/ee_auto.rc
+ee update
+rm /tmp/eeupdate*
+mkdir -p /var/www/
+chown -R www-data:www-data /var/www/
 echo
 echo "${b}Finished installing easyengine.${x}"
 echo
+
+### Create and configure sites and TLS certificates via LetsEncrypt
 
 echo "${b}Now creating easyengine site for $hostname, generating its TLS certificate, and installing it...${x}"
 echo
@@ -1334,9 +963,9 @@ echo
 
 echo "${b}Now creating all-in-one TLS file for $hostname for ejabberd...${x}"
 echo
-touch $tlsdir/hostname.pem
-cat /etc/letsencrypt/live/"$hostname"/privkey.pem > "$tlsdir"/hostname.pem
-cat /etc/letsencrypt/live/"$hostname"/fullchain.pem >> "$tlsdir"/hostname.pem
+touch $tls_dir/hostname.pem
+cat /etc/letsencrypt/live/"$hostname"/privkey.pem > "$tls_dir"/hostname.pem
+cat /etc/letsencrypt/live/"$hostname"/fullchain.pem >> "$tls_dir"/hostname.pem
 echo "${b}Finished creating all-in-one TLS file for $hostname for ejabberd.${x}"
 echo
 
@@ -1345,8 +974,6 @@ echo
 cp "$sourcedir"/conf/web/hostname/index.html /var/www/"$hostname"/htdocs/
 echo "${b}Finished setting index.html in docroot for $hostname.${x}"
 echo
-
-
 
 echo "${b}Now creating easyengine site for xu.$domain, generating its TLS certificate, and installing it...${x}"
 echo
@@ -1382,13 +1009,13 @@ echo
 
 echo "${b}Now creating all-in-one TLS file for xu.$domain for ejabberd...${x}"
 echo
-touch $tlsdir/xu.pem
-cat /etc/letsencrypt/live/xu."$domain"/privkey.pem > "$tlsdir"/xu.pem
-cat /etc/letsencrypt/live/xu."$domain"/fullchain.pem >> "$tlsdir"/xu.pem
+touch $tls_dir/xu.pem
+cat /etc/letsencrypt/live/xu."$domain"/privkey.pem > "$tls_dir"/xu.pem
+cat /etc/letsencrypt/live/xu."$domain"/fullchain.pem >> "$tls_dir"/xu.pem
 echo "${b}Finished creating all-in-one TLS file for xu.$domain for ejabberd.${x}"
 echo
 
-
+### Also provision a TLS certificate for $domain if during $config_option 1 or 2 specific configuration the user decided to point the domain here and let us automatically do the rest
 
 if [ $additional_tls_mode = "here" ]
 then
@@ -1430,10 +1057,10 @@ then
 
 	echo "${b}Now creating all-in-one TLS file for $domain for ejabberd...${x}"
 	echo
-	touch $tlsdir/domain.pem
-	cat /etc/letsencrypt/live/"$domain"/privkey.pem > "$tlsdir"/domain.pem
-	cat /etc/letsencrypt/live/"$domain"/fullchain.pem >> "$tlsdir"/domain.pem
-	domtlscertloc=$tlsdir/domain.pem
+	touch $tls_dir/domain.pem
+	cat /etc/letsencrypt/live/"$domain"/privkey.pem > "$tls_dir"/domain.pem
+	cat /etc/letsencrypt/live/"$domain"/fullchain.pem >> "$tls_dir"/domain.pem
+	domtlscertloc=$tls_dir/domain.pem
 	echo "${b}Finished creating all-in-one TLS file for $domain for ejabberd...${x}"
 	echo
 
@@ -1491,13 +1118,13 @@ echo
 
 service nginx restart
 
-
+### Prepare APT for ejabberd installation
 
 aenigma-add_ejabberd_repo
 
 aenigma-install_ejabberd_config
 
-
+### Create ejabberd uploads directory
 
 echo "${b}Now creating uploads directory...${x}"
 echo
@@ -1505,7 +1132,7 @@ mkdir -p /etc/ejabberd/uploads/
 echo "${b}Finished creating uploads directory.${x}"
 echo
 
-
+### Create HTTP uploads directory
 
 echo "${b}Now creating HTTP fileserver directory...${x}"
 echo
@@ -1513,7 +1140,7 @@ mkdir -p /var/www/ejabberd/
 echo "${b}Finished creating HTTP fileserver directory.${x}"
 echo
 
-
+### Create logfile
 
 echo "${b}Now creating logfile...${x}"
 echo
@@ -1522,7 +1149,7 @@ touch /var/log/ejabberd/www_access.log
 echo "${b}Finished creating logfile.${x}"
 echo
 
-
+### Install aenigma tools in installation directory
 
 echo "${b}Now copying tools directory...${x}"
 echo
@@ -1531,24 +1158,16 @@ cp -r $sourcedir/tools/* $toolsdir/
 echo "${b}Finished copying tools directory.${x}"
 echo
 
+### Add backup script to crontab
 
+os-add_cron_job -n ee-br-backup -t "8 4 * * * " -c "bash /root/openspace42/$short_name/$short_name-backup"
 
-echo "${b}Now adding backup script to daily crontab...${x}"
-echo
-touch /etc/cron.daily/aenigma-backup
-chmod 755 /etc/cron.daily/aenigma-backup
-echo -e '#!/bin/bash' > /etc/cron.daily/aenigma-backup
-echo >> /etc/cron.daily/aenigma-backup
-echo "bash /root/openspace42/aenigma/tools/aenigma-backup" >> /etc/cron.daily/aenigma-backup
-echo "${b}Finished adding backup script to daily crontab...${x}"
-echo
-
-
+### Install SSLH
 
 echo "${b}Now installing SSLH...${x}"
 echo
 /usr/sbin/service sslh stop &> /dev/null || true
-sshport="$(cat $basedir/DFBS/ssh-port)"
+sshport="$(cat $basedir/dfbs/ssh-port)"
 apt-get -y install libwrap0-dev libconfig8-dev || true
 rm -r $tmpdir/sslh &> /dev/null || true
 git clone https://github.com/yrutschle/sslh $tmpdir/sslh
@@ -1571,7 +1190,6 @@ cp $sourcedir/conf/sslh/etc.init.d.sslh /etc/init.d/sslh
 chmod +x /etc/init.d/sslh
 update-rc.d sslh defaults
 systemctl daemon-reload
-#cp $sourcedir/conf/sslh/etc-default-sslh-v1.18 /etc/default/sslh
 rm -r $tmpdir/sslh
 mkdir -p /var/run/sslh
 touch /var/run/sslh/sslh.pid
@@ -1580,30 +1198,11 @@ echo
 echo "${b}Finished installing SSLH.${x}"
 echo
 
+### Ensure DPKG is available before proceeding
 
+os-check_dpkg_availability
 
-echo "${b}Now ensuring DPKG is available...${x}"
-echo
-sleep 3
-i=0
-tput sc
-while fuser /var/lib/dpkg/lock >/dev/null 2>&1 ; do
-	case $((i % 4)) in
-	0 ) j="-" ;;
-	1 ) j="\\" ;;
-	2 ) j="|" ;;
-	3 ) j="/" ;;
-	esac
-	tput rc
-	echo -en "\\r[$j] ${b}Waiting for other software managers to finish...${x}"
-	echo
-	sleep 0.5
-	((i=i+1))
-done
-echo "${b}DPKG available. Continuing...${x}"
-echo
-
-
+### Actually install ejabberd
 
 echo "${b}Now installing ejabberd...${x}"
 echo
@@ -1612,13 +1211,13 @@ echo
 echo "${b}Finished installing ejabberd.${x}"
 echo
 
-
+### Secure permissions
 
 echo "${b}Now securing permissions...${x}"
 echo
 
-chown -R ejabberd:ejabberd $tlsdir
-chmod -R 700 $tlsdir
+chown -R ejabberd:ejabberd $tls_dir
+chmod -R 700 $tls_dir
 
 chown -R ejabberd:ejabberd /etc/ejabberd/uploads/
 chmod -R 755 /etc/ejabberd/uploads/
@@ -1629,7 +1228,7 @@ chmod -R 755 /var/www/ejabberd/
 echo "${b}Finished securing permissions.${x}"
 echo
 
-
+### Restart ejabberd and ensure it correctly comes up
 
 echo "${b}Now stopping ejabberd...${x}"
 echo
@@ -1647,7 +1246,7 @@ echo
 echo "${b}Finished starting ejabberd.${x}"
 echo
 
-
+### Register ejabberd admin user
 
 echo "${b}Now registering ejabberd admin user [if it doesn't yet exist]...${x}"
 echo
@@ -1678,7 +1277,7 @@ else
 	ejbdadminpwreset=y
 fi
 
-
+### Update ejabberd's module repo
 
 echo "${b}Now updating ejabberd's module repo...${x}"
 echo
@@ -1686,7 +1285,7 @@ echo
 echo "${b}Finished updating ejabberd's module repo...${x}"
 echo
 
-
+### Create shared roster groups
 
 echo "${b}Now creating 'ADMIN:EVERYBODY' and 'ADMIN:ONLINE' shared roster groups [admin@$domain can see 'everybody' and 'all online']...${x}"
 echo
@@ -1700,7 +1299,7 @@ echo "${b}Finished creating shared roster groups.${x}"
 echo
 clear
 
-
+### Run a generic APT operation to catch its output and alert the user if something has gone wrong
 
 echo "${b}Now performing a final run of APT to ensure all package installations have completed successfully...${x}"
 echo
@@ -1723,6 +1322,7 @@ fi
 set -e
 clear
 
+### Pring login information and credentials
 
 echo "${g}${b}You can finally log in:${x}"
 echo
@@ -1743,50 +1343,16 @@ fi
 read -rp "${b}[press enter to continue reading...]${x}"
 clear
 
+### Set installation complete checkfile
 
+touch $conf_dir/install_complete
+echo "$latest_vers" > "$conf_dir"/install_complete
 
-touch $conf_dir/installcomplete
-echo "$latest_vers" > "$conf_dir"/installcomplete
+### Generate aenigma-specific DHparam file
 
+os-generate_project_specific_dhparam
 
-
-if [ -f $tlsdir/dh.pem ]
-then
-	echo "${g}${b}DHparam file found. Skipping generation...${x}"
-	echo
-else
-	echo "${b}One last thing: to make your TLS connections even more secure, you can generate a file called DH parameters file.${x}"
-	echo
-	echo "${b}To do so, simply answer yes, but be aware that this is a very time consuming cryptographic operation, although it must only be performed once.${x}"
-	echo
-	read -rp "${b}Generate openssl DHparams file? (Y/n): ${x}" -n 1
-	echo
-	if [[ ! $REPLY =~ ^[Nn]$ ]]
-	then
-		echo "${b}Ok, proceeding with DHparams file generation...${x}"
-		echo
-		openssl dhparam -out $tlsdir/dh.pem.incomplete 4096
-		mv $tlsdir/dh.pem.incomplete $tlsdir/dh.pem
-		echo
-	else
-		echo
-		echo "${b}Skipping DHparams generation.${x}"
-		echo
-		echo "${b}You can always generate them at a later time by executing:${x}"
-		echo
-		echo "${b}openssl dhparam -out $tlsdir/dh.pem.incomplete 4096${x}"
-		echo
-		echo "${b}[and making sure you let the command run until it exits]. Once it's done, execute:${x}"
-		echo
-		echo "${b}mv $tlsdir/dh.pem.incomplete $tlsdir/dh.pem${x}"
-		echo
-		/usr/sbin/service ejabberd restart
-	fi
-	echo "${b}Finished generating DHparams.${x}"
-	echo
-fi
-sleep 1
-clear
+### Remove installer directory
 
 echo "${b}Now removing installer directory...${x}"
 echo
@@ -1799,5 +1365,3 @@ rm -r aenigma/
 
 echo "${g}${b}aenigma installation complete!${x}"
 echo
-
-exit
