@@ -7,8 +7,8 @@ set -u
 
 # Source local functions file
 
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. $script_dir/functions
+source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. $source_dir/functions
 
 # Check for root user runtime
 
@@ -174,7 +174,7 @@ then
 	if [[ ! $REPLY =~ ^[Nn]$ ]]
 	then
 		echo "${b}Ok, proceeding with backup...${x}"
-		bash $sourcedir/tools/$short_name-backup
+		bash $source_dir/tools/$short_name-backup
 		echo
 		echo "${b}Backup complete. Continuing installation...${x}"
 		echo
@@ -634,7 +634,7 @@ else
                 )
 fi
 
-if [ $ipv6avail = "y" ]
+if [ $ipv6_avail = "y" ]
 then
         declare -a iparray=(
                 "v4"
@@ -929,8 +929,8 @@ wget -qO ee rt.cx/ee
 bash ee || true
 rm ee
 source /etc/bash_completion.d/ee_auto.rc
-ee update
-rm /tmp/eeupdate*
+ee update || true
+rm /tmp/eeupdate* || true
 mkdir -p /var/www/
 chown -R www-data:www-data /var/www/
 echo
@@ -948,8 +948,8 @@ echo
 
 echo "${b}Now setting custom nginx config for $hostname...${x}"
 echo
-sed -i "s/example.im/${hostname}/g" $sourcedir/conf/nginx/hostname.conf
-cp "$sourcedir"/conf/nginx/hostname.conf /etc/nginx/sites-available/"$hostname"
+sed -i "s/example.im/${hostname}/g" $source_dir/conf/nginx/hostname.conf
+cp "$source_dir"/conf/nginx/hostname.conf /etc/nginx/sites-available/"$hostname"
 service nginx reload
 echo "${b}Finished setting custom nginx config for $hostname.${x}"
 echo
@@ -981,7 +981,7 @@ echo
 
 echo "${b}Now setting index.html in docroot for $hostname...${x}"
 echo
-cp "$sourcedir"/conf/web/hostname/index.html /var/www/"$hostname"/htdocs/
+cp "$source_dir"/conf/web/hostname/index.html /var/www/"$hostname"/htdocs/
 echo "${b}Finished setting index.html in docroot for $hostname.${x}"
 echo
 
@@ -994,8 +994,8 @@ echo
 
 echo "${b}Now setting custom nginx config for xu.$domain...${x}"
 echo
-sed -i "s/example.im/xu.${domain}/g" $sourcedir/conf/nginx/xu.conf
-cp "$sourcedir"/conf/nginx/xu.conf /etc/nginx/sites-available/xu."$domain"
+sed -i "s/example.im/xu.${domain}/g" $source_dir/conf/nginx/xu.conf
+cp "$source_dir"/conf/nginx/xu.conf /etc/nginx/sites-available/xu."$domain"
 service nginx reload
 echo "${b}Finished setting custom nginx config for xu.$domain.${x}"
 echo
@@ -1042,8 +1042,8 @@ then
 
 	echo "${b}Now setting custom nginx config for $domain...${x}"
 	echo
-	sed -i "s/example.im/${domain}/g" $sourcedir/conf/nginx/domain.conf
-	cp "$sourcedir"/conf/nginx/domain.conf /etc/nginx/sites-available/"$domain"
+	sed -i "s/example.im/${domain}/g" $source_dir/conf/nginx/domain.conf
+	cp "$source_dir"/conf/nginx/domain.conf /etc/nginx/sites-available/"$domain"
 	service nginx reload
 	echo "${b}Finished setting custom nginx config for $domain.${x}"
 	echo
@@ -1076,21 +1076,21 @@ then
 
 	echo "${b}Now setting index.html in docroot for $domain...${x}"
 	echo
-	cp "$sourcedir"/conf/web/domain/index.html /var/www/"$domain"/htdocs/
+	cp "$source_dir"/conf/web/domain/index.html /var/www/"$domain"/htdocs/
 	echo "${b}Finished setting index.html in docroot for $domain.${x}"
 	echo
 
 	echo "${b}Now adding IPv6 support to the HTTPS version of the $domain site...${x}"
 	echo
-	sed -i "s/example.im/${domain}/g" $sourcedir/conf/nginx/ssl-domain.conf
-	cp "$sourcedir"/conf/nginx/ssl-domain.conf /var/www/"$domain"/conf/nginx/ssl.conf
+	sed -i "s/example.im/${domain}/g" $source_dir/conf/nginx/ssl-domain.conf
+	cp "$source_dir"/conf/nginx/ssl-domain.conf /var/www/"$domain"/conf/nginx/ssl.conf
 	echo "${b}Finished adding IPv6 support to the HTTPS version of the $domain site...${x}"
 	echo
 
 	echo "${b}Now adding IPv6 support to the HTTPS redirect for the $domain site...${x}"
 	echo
-	sed -i "s/example.im/${domain}/g" $sourcedir/conf/nginx/force-ssl-domain.conf
-	cp "$sourcedir"/conf/nginx/force-ssl-domain.conf /etc/nginx/conf.d/force-ssl-"$domain".conf
+	sed -i "s/example.im/${domain}/g" $source_dir/conf/nginx/force-ssl-domain.conf
+	cp "$source_dir"/conf/nginx/force-ssl-domain.conf /etc/nginx/conf.d/force-ssl-"$domain".conf
 	echo "${b}Finished adding IPv6 support to the HTTPS redirect for the $domain site...${x}"
 	echo
 
@@ -1100,29 +1100,29 @@ fi
 
 echo "${b}Now adding IPv6 support to the HTTPS version of the $hostname site...${x}"
 echo
-sed -i "s/example.im/${hostname}/g" $sourcedir/conf/nginx/ssl-hostname.conf
-cp "$sourcedir"/conf/nginx/ssl-hostname.conf /var/www/"$hostname"/conf/nginx/ssl.conf
+sed -i "s/example.im/${hostname}/g" $source_dir/conf/nginx/ssl-hostname.conf
+cp "$source_dir"/conf/nginx/ssl-hostname.conf /var/www/"$hostname"/conf/nginx/ssl.conf
 echo "${b}Finished adding IPv6 support to the HTTPS version of the $hostname site...${x}"
 echo
 
 echo "${b}Now adding IPv6 support to the HTTPS redirect for the $hostname site...${x}"
 echo
-sed -i "s/example.im/${hostname}/g" $sourcedir/conf/nginx/force-ssl-hostname.conf
-cp "$sourcedir"/conf/nginx/force-ssl-hostname.conf /etc/nginx/conf.d/force-ssl-"$hostname".conf
+sed -i "s/example.im/${hostname}/g" $source_dir/conf/nginx/force-ssl-hostname.conf
+cp "$source_dir"/conf/nginx/force-ssl-hostname.conf /etc/nginx/conf.d/force-ssl-"$hostname".conf
 echo "${b}Finished adding IPv6 support to the HTTPS redirect for the $hostname site...${x}"
 echo
 
 echo "${b}Now adding IPv6 support to the HTTPS version of the xu.$domain site...${x}"
 echo
-sed -i "s/example.im/xu.${domain}/g" $sourcedir/conf/nginx/ssl-xu.conf
-cp "$sourcedir"/conf/nginx/ssl-xu.conf /var/www/xu."$domain"/conf/nginx/ssl.conf
+sed -i "s/example.im/xu.${domain}/g" $source_dir/conf/nginx/ssl-xu.conf
+cp "$source_dir"/conf/nginx/ssl-xu.conf /var/www/xu."$domain"/conf/nginx/ssl.conf
 echo "${b}Finished adding IPv6 support to the HTTPS version of the xu.$domain site...${x}"
 echo
 
 echo "${b}Now adding IPv6 support to the HTTPS redirect for the xu.$domain site...${x}"
 echo
-sed -i "s/example.im/xu.${domain}/g" $sourcedir/conf/nginx/force-ssl-xu.conf
-cp "$sourcedir"/conf/nginx/force-ssl-xu.conf /etc/nginx/conf.d/force-ssl-xu."$domain".conf
+sed -i "s/example.im/xu.${domain}/g" $source_dir/conf/nginx/force-ssl-xu.conf
+cp "$source_dir"/conf/nginx/force-ssl-xu.conf /etc/nginx/conf.d/force-ssl-xu."$domain".conf
 echo "${b}Finished adding IPv6 support to the HTTPS redirect for the xu.$domain site...${x}"
 echo
 
@@ -1164,7 +1164,7 @@ echo
 echo "${b}Now copying tools directory...${x}"
 echo
 mkdir -p $toolsdir
-cp -r $sourcedir/tools/* $toolsdir/
+cp -r $source_dir/tools/* $toolsdir/
 echo "${b}Finished copying tools directory.${x}"
 echo
 
@@ -1183,20 +1183,20 @@ rm -r $tmpdir/sslh &> /dev/null || true
 git clone https://github.com/yrutschle/sslh $tmpdir/sslh
 ( cd $tmpdir/sslh && make install && make && cp sslh-select /usr/local/sbin/sslh )
 #mkdir -p /etc/sslh/
-sed -i "s|this_ipv4-var|${this_ipv4}|g" $sourcedir/conf/sslh/etc-sslh-v1.18
-if [ $ipv6avail = "y" ]
+sed -i "s|this_ipv4-var|${this_ipv4}|g" $source_dir/conf/sslh/etc-sslh-v1.18
+if [ $ipv6_avail = "y" ]
 then
-	sed -i "s|#ipv6_comma|,|g" $sourcedir/conf/sslh/etc-sslh-v1.18
-	sed -i "s|#ipv6_line||g" $sourcedir/conf/sslh/etc-sslh-v1.18
-	sed -i "s|this_ipv6-var|${this_ipv6}|g" $sourcedir/conf/sslh/etc-sslh-v1.18
+	sed -i "s|#ipv6_comma|,|g" $source_dir/conf/sslh/etc-sslh-v1.18
+	sed -i "s|#ipv6_line||g" $source_dir/conf/sslh/etc-sslh-v1.18
+	sed -i "s|this_ipv6-var|${this_ipv6}|g" $source_dir/conf/sslh/etc-sslh-v1.18
 else
-	sed -i "s|#ipv6_comma||g" $sourcedir/conf/sslh/etc-sslh-v1.18
-	sed -i "s|#ipv6_line|#|g" $sourcedir/conf/sslh/etc-sslh-v1.18
+	sed -i "s|#ipv6_comma||g" $source_dir/conf/sslh/etc-sslh-v1.18
+	sed -i "s|#ipv6_line|#|g" $source_dir/conf/sslh/etc-sslh-v1.18
 fi
-sed -i "s|domain-var|${domain}|g" $sourcedir/conf/sslh/etc-sslh-v1.18
-sed -i "s|sshport-var|${sshport}|g" $sourcedir/conf/sslh/etc-sslh-v1.18
-cp $sourcedir/conf/sslh/etc-sslh-v1.18 /etc/sslh.cfg
-cp $sourcedir/conf/sslh/etc.init.d.sslh /etc/init.d/sslh
+sed -i "s|domain-var|${domain}|g" $source_dir/conf/sslh/etc-sslh-v1.18
+sed -i "s|sshport-var|${sshport}|g" $source_dir/conf/sslh/etc-sslh-v1.18
+cp $source_dir/conf/sslh/etc-sslh-v1.18 /etc/sslh.cfg
+cp $source_dir/conf/sslh/etc.init.d.sslh /etc/init.d/sslh
 chmod +x /etc/init.d/sslh
 update-rc.d sslh defaults
 systemctl daemon-reload
