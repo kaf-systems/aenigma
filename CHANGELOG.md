@@ -7,12 +7,12 @@
 1.2: Enabled mod_push in ejabberd.yml for versions 18.01 and later
 1.3: Requires user to place any external TLS certificate for $domain inside the aenigma /etc/ssl/aenigma TLS certificates folder as other arbitrary directories are blocked in newer versions.
 
-2. Added use of git versioning following [EasyEngine-Backup-Restore](https://github.com/openspace42/EasyEngine-Backup-Restore). The old installer.sh is now called "setup" and the old installer-v0.xx is now simply called "install".
+2. Added use of git versioning following [EasyEngine-Backup-Restore](https://github.com/openspace42/EasyEngine-Backup-Restore). The old installer.sh is now called "setup" and the old installer-vx.yz is now simply called "install".
 
-3. Added use of the "functions" file and [openspace Bash Functions](https://github.com/openspace42/bash_functions) to modularize and standardize everything we do in aenigma.
+3. Added use of the "functions" file and [openspace Bash Functions](https://github.com/openspace42/bash_functions) to modularize and standardize everything we do across openspace projects.
 
 4. Allowed APT to fail during installation up to the last step, where instead any errors are caught by the script as usual.
-This way the installation can proceed until the end and possibly fix any errors causing APT to previously fail, and - if not - at least the user can attempt to fix things manually once the installation is actually complete, before running it again and making everything go back to normal.
+This way the installation can proceed until the end and possibly fix any errors causing APT to previously fail, and - if that doesn't work - at least the user can attempt to fix things manually once the installation is actually complete, before running it again and making everything go back to normal.
 
 
 ## v0.46 [2017-12-19]

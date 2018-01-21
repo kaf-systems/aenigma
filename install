@@ -76,30 +76,40 @@ else
 	skip_intro=n
 fi
 
-### If we're not installing a bleeding_edge version, ensure there's no later version already installed
+### If we're not installing a bleeding_edge version, ensure there's no more recent version already installed
 
-if [ ! -z "${latest_vers-}" ]
+if [ ! -f $conf_dir/beta ]
 then
 
-	if [ -f $conf_dir/installed_vers ]
+	if [ -f $conf_dir/version_installed ]
 	then
-		prev_vers="$(cat $conf_dir/installed_vers)"
-		if (( $(echo "$latest_vers < $prev_vers" | bc -l) ))
-		then
-	        	echo "${r}${b}You have previously installed a newer version of aenigma.${x}"
-			echo
-			echo "${b}You likely recently opted out of beta versions. If so, please re-enable beta versions until the next version's stable release.${x}"
-			echo
-			echo "${b}Exiting...${x}"
-			echo
-			exit
-		else
-			echo "$latest_vers" > "$conf_dir"/installed_vers
-		fi
+
+		prev_version_installed="$(cat $conf_dir/version_installed)"
+
+                if grep -q "bleeding_edge" "$conf_dir/version_installed"
+                then
+                        echo "${b-}You're now installing stable version | $latest_vers | over a previously bleeding_edge version of $short_name.${x-}"
+                        echo
+                        echo "${b-}This is normal if you've opted out of beta versions since the last install, but keep in mind that some features might stop working if they haven't yet been implemented in this latest stable version.${x-}"
+                        echo
+                        read -rp "${b-}[press enter to continue reading...]${x-}"
+                	clear
+                else
+        		if (( $(echo "$latest_vers < $prev_version_installed" | bc -l) ))
+        		then
+        	        	echo "${r}${b}You have previously installed a newer version of $short_name.${x}"
+        			echo
+        			echo "${b}This is likely an error. If you're trying to manually downgrade to a previous version, edit the installer to bypass this check.${x}"
+        			echo
+        			os-exit_function
+        		fi
+                fi
 	else
-		prev_vers=null
+
+		prev_version_installed=null
 		touch $conf_dir/installed_vers
 		echo "$latest_vers" > $conf_dir/installed_vers
+
 	fi
 
 fi
@@ -108,14 +118,14 @@ fi
 
 incomplete_install=n
 
-if [ ! $prev_vers = "null" ]
+if [ ! $prev_version_installed = "null" ]
 then
 	if [ ! -f $conf_dir/install_complete ]
 	then
 		incomplete_install=y
 	else
 		lastcompleteinstallvers="$(cat $conf_dir/install_complete)"
-		if [ "$lastcompleteinstallvers" != "$prev_vers" ]
+		if [ "$lastcompleteinstallvers" != "$prev_version_installed" ]
 		then
 			incomplete_install=y
 		fi
@@ -141,7 +151,7 @@ fi
 
 ### Alert in case of reinstall
 
-if [ ! $prev_vers = "null" ]
+if [ ! $prev_version_installed = "null" ]
 then
 
 	echo "${b}You're now re-running the $short_name installer.${x}"
