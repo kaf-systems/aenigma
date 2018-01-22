@@ -11,8 +11,8 @@ pidfile: "/var/run/sslh/sslh.pid";
 
 listen:
 (
-    { host: "thisipv4-var";       port: "443"; }#ipv6_comma
-#ipv6_line    { host: "thisipv6-var";       port: "443"; }
+    { host: "this_ipv4-var";       port: "443"; }#ipv6_comma
+#ipv6_line    { host: "this_ipv6-var";       port: "443"; }
 );
 
 protocols:

@@ -144,7 +144,7 @@ aenigma-install_ejabberd_config() {
         touch /etc/ejabberd/ejabberd.yml
         sed -i "s/example.im/${domain}/g" "$source_ejab_conf_file"
         sed -i "s/hostname.im/${hostname}/g" "$source_ejab_conf_file"
-        if [ $configoption = 1 ]
+        if [ $config_option = 1 ]
         then
         sed -i "s|example.im|${domain}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt
         sed -i "s|pathtofile|${domtlscertloc}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt

@@ -166,7 +166,7 @@ then
         	echo
         	echo "${b}Either you intentionally aborted the install or the script got somehow terminated before it finished.${x}"
         	echo
-        	echo "${b}In the latter case, it is possible something unforseen might go wrong during this install. If so, simply file an issue report at:${x}"
+        	echo "${b}In either case, if you're having any issue, simply file an issue report at:${x}"
         	echo
         	echo "${b} | https://github.com/$author_name/$short_name/issues | ${x}"
         	echo
@@ -1174,8 +1174,8 @@ echo
 
 echo "${b}Now copying tools directory...${x}"
 echo
-mkdir -p $toolsdir
-cp -r $source_dir/tools/* $toolsdir/
+mkdir -p $tools_dir
+cp -r $source_dir/tools/* $tools_dir/
 echo "${b}Finished copying tools directory.${x}"
 echo
 
@@ -1188,11 +1188,11 @@ os-add_cron_job -n ee-br-backup -t "8 4 * * * " -c "bash /root/openspace42/$shor
 echo "${b}Now installing SSLH...${x}"
 echo
 /usr/sbin/service sslh stop &> /dev/null || true
-sshport="$(cat $basedir/dfbs/ssh-port)"
+ssh_port="$(cat $os_base_dir/dfbs/ssh-port)"
 apt-get -y install libwrap0-dev libconfig8-dev || true
-rm -r $tmpdir/sslh &> /dev/null || true
-git clone https://github.com/yrutschle/sslh $tmpdir/sslh
-( cd $tmpdir/sslh && make install && make && cp sslh-select /usr/local/sbin/sslh )
+rm -r $tmp_dir/sslh &> /dev/null || true
+git clone https://github.com/yrutschle/sslh $tmp_dir/sslh
+( cd $tmp_dir/sslh && make install && make && cp sslh-select /usr/local/sbin/sslh )
 #mkdir -p /etc/sslh/
 sed -i "s|this_ipv4-var|${this_ipv4}|g" $source_dir/conf/sslh/etc-sslh-v1.18
 if [ $ipv6_avail = "y" ]
@@ -1205,16 +1205,16 @@ else
 	sed -i "s|#ipv6_line|#|g" $source_dir/conf/sslh/etc-sslh-v1.18
 fi
 sed -i "s|domain-var|${domain}|g" $source_dir/conf/sslh/etc-sslh-v1.18
-sed -i "s|sshport-var|${sshport}|g" $source_dir/conf/sslh/etc-sslh-v1.18
+sed -i "s|ssh_port-var|${ssh_port}|g" $source_dir/conf/sslh/etc-sslh-v1.18
 cp $source_dir/conf/sslh/etc-sslh-v1.18 /etc/sslh.cfg
 cp $source_dir/conf/sslh/etc.init.d.sslh /etc/init.d/sslh
 chmod +x /etc/init.d/sslh
 update-rc.d sslh defaults
 systemctl daemon-reload
-rm -r $tmpdir/sslh
+rm -r $tmp_dir/sslh
 mkdir -p /var/run/sslh
 touch /var/run/sslh/sslh.pid
-service sslh restart
+service sslh restart || true
 echo
 echo "${b}Finished installing SSLH.${x}"
 echo
@@ -1343,7 +1343,7 @@ fi
 set -e
 clear
 
-### Run a generic nginx restart to catch its output and alert the user if something has gone wrong
+### Run an nginx restart to catch its output and alert the user if something has gone wrong
 
 echo "${b}Now performing a final restart of nginx to ensure all related installations have completed successfully...${x}"
 echo
@@ -1356,6 +1356,29 @@ then
 else
 	echo
 	echo "${r}${b}An error has occured during nginx operations.${x}"
+	echo
+	echo "${b}This was the last step in this installation, so it's possible your end result is at least partially working.${x}"
+	echo
+	echo "${b}Please review the above log and try running the installation again. If necessary open an issue on github. Thank you.${x}"
+	echo
+	read -rp "${b}[press enter to continue reading...]${x}"
+fi
+set -e
+clear
+
+### Run an sslh restart to catch its output and alert the user if something has gone wrong
+
+echo "${b}Now performing a final restart of nginx to ensure all related installations have completed successfully...${x}"
+echo
+set +e
+if service sslh restart
+then
+	echo
+	echo "${g}${b}All sslh installations completed successfully...${x}"
+	echo
+else
+	echo
+	echo "${r}${b}An error has occured during sslh operations.${x}"
 	echo
 	echo "${b}This was the last step in this installation, so it's possible your end result is at least partially working.${x}"
 	echo
