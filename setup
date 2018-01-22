@@ -49,5 +49,5 @@ else
 	( cd $source_dir && git checkout tags/v$latest_vers && bash ./install --return-check )
 fi
 
-echo "${b}Exiting installer.${x}"
+echo "Exiting installer"
 echo
