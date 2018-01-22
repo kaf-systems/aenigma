@@ -183,7 +183,7 @@ then
 
         }
 
-        os-set_option -o hostname -v n -d y -p xmpp
+        os-set_option -o hostname -v n -d y -p /etc/hostname
 
 	if [ $config_option = "3" ]
 	then
