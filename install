@@ -961,7 +961,7 @@ echo "${b}Now setting custom nginx config for $hostname...${x}"
 echo
 sed -i "s/example.im/${hostname}/g" $source_dir/conf/nginx/hostname.conf
 cp "$source_dir"/conf/nginx/hostname.conf /etc/nginx/sites-available/"$hostname"
-service nginx reload
+service nginx reload || true
 echo "${b}Finished setting custom nginx config for $hostname.${x}"
 echo
 
@@ -1007,7 +1007,7 @@ echo "${b}Now setting custom nginx config for xu.$domain...${x}"
 echo
 sed -i "s/example.im/xu.${domain}/g" $source_dir/conf/nginx/xu.conf
 cp "$source_dir"/conf/nginx/xu.conf /etc/nginx/sites-available/xu."$domain"
-service nginx reload
+service nginx reload || true
 echo "${b}Finished setting custom nginx config for xu.$domain.${x}"
 echo
 
@@ -1055,7 +1055,7 @@ then
 	echo
 	sed -i "s/example.im/${domain}/g" $source_dir/conf/nginx/domain.conf
 	cp "$source_dir"/conf/nginx/domain.conf /etc/nginx/sites-available/"$domain"
-	service nginx reload
+	service nginx reload || true
 	echo "${b}Finished setting custom nginx config for $domain.${x}"
 	echo
 
@@ -1137,7 +1137,7 @@ cp "$source_dir"/conf/nginx/force-ssl-xu.conf /etc/nginx/conf.d/force-ssl-xu."$d
 echo "${b}Finished adding IPv6 support to the HTTPS redirect for the xu.$domain site...${x}"
 echo
 
-service nginx restart
+service nginx restart || true
 
 ### Prepare APT for ejabberd installation
 
@@ -1333,6 +1333,29 @@ then
 else
 	echo
 	echo "${r}${b}An error has occured during APT operations.${x}"
+	echo
+	echo "${b}This was the last step in this installation, so it's possible your end result is at least partially working.${x}"
+	echo
+	echo "${b}Please review the above log and try running the installation again. If necessary open an issue on github. Thank you.${x}"
+	echo
+	read -rp "${b}[press enter to continue reading...]${x}"
+fi
+set -e
+clear
+
+### Run a generic nginx restart to catch its output and alert the user if something has gone wrong
+
+echo "${b}Now performing a final restart of nginx to ensure all related installations have completed successfully...${x}"
+echo
+set +e
+if service nginx restart
+then
+	echo
+	echo "${g}${b}All nginx installations completed successfully...${x}"
+	echo
+else
+	echo
+	echo "${r}${b}An error has occured during nginx operations.${x}"
 	echo
 	echo "${b}This was the last step in this installation, so it's possible your end result is at least partially working.${x}"
 	echo
