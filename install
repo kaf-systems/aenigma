@@ -103,7 +103,7 @@ validate_input() {
 
 }
 
-os-set_option -o config_option -v y -d n -s xmpp
+os-set_option -o config_option -v y -d n -p xmpp
 
 ### Set xmpp domain [only one supported for now] if config_option != 3
 ### In the latter case the xmpp domain will match the machine hostname [see below]
@@ -121,7 +121,7 @@ then
 
         }
 
-        os-set_option -o domain -v n -d y -s xmpp
+        os-set_option -o domain -v n -d y -p xmpp
 
         if [ $prev_val_outcome = "not-kept" ]
         then
@@ -183,7 +183,7 @@ then
 
         }
 
-        os-set_option -o hostname -v n -d y -s xmpp
+        os-set_option -o hostname -v n -d y -p xmpp
 
 	if [ $config_option = "3" ]
 	then
@@ -1130,13 +1130,13 @@ echo
 
 echo "${b}Now registering ejabberd admin user [if it doesn't yet exist]...${x}"
 echo
-ejbdadminpw=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
-/usr/sbin/ejabberdctl register admin "$domain" "$ejbdadminpw" &> /dev/null || true
+ejab_admin_pw=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 24 | head -n 1)
+/usr/sbin/ejabberdctl register admin "$domain" "$ejab_admin_pw" &> /dev/null || true
 echo "${b}Finished registering ejabberd admin user.${x}"
 echo
 clear
 
-if [ -f $conf_dir/ejabberdadminpwset ]
+if [ -f $conf_dir/ejab_admin_pw_set ]
 then
 	read -rp "${b}Leave ejabberd admin user password the same as previously set? (Y/n): ${x}" -n 1
 	echo
@@ -1144,17 +1144,17 @@ then
 	then
 		echo "${b}Skipping ejabberd admin user password reset.${x}"
 		echo
-		ejbdadminpwreset=n
+		ejab_admin_pwreset=n
 	else
 		echo
-		echo "${b}Ok, resetting ejabberd admin user password to: | $ejbdadminpw | ${x}"
+		echo "${b}Ok, resetting ejabberd admin user password to: | $ejab_admin_pw | ${x}"
 		echo
-		/usr/sbin/ejabberdctl change_password admin "$domain" "$ejbdadminpw"
-		ejbdadminpwreset=y
+		/usr/sbin/ejabberdctl change_password admin "$domain" "$ejab_admin_pw"
+		ejab_admin_pwreset=y
 	fi
 else
-	touch $conf_dir/ejabberdadminpwset
-	ejbdadminpwreset=y
+	touch $conf_dir/ejab_admin_pw_set
+	ejab_admin_pwreset=y
 fi
 
 ### Update ejabberd's module repo
@@ -1257,9 +1257,9 @@ echo
 echo "${b}admin@$domain${x}"
 echo
 
-if [ $ejbdadminpwreset = "y" ]
+if [ $ejab_admin_pwreset = "y" ]
 then
-	echo "${b}$ejbdadminpw${x}"
+	echo "${b}$ejab_admin_pw${x}"
 	echo
 else
 	echo "${b}[your previously set password]${x}"
