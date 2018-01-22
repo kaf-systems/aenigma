@@ -1410,10 +1410,9 @@ fi
 read -rp "${b}[press enter to continue reading...]${x}"
 clear
 
-### Set installation complete checkfile
+### Set installation complete checkfile with installed version
 
-touch $conf_dir/install_complete
-echo "$latest_vers" > "$conf_dir"/install_complete
+cp $conf_dir/version_initiated $conf_dir/version_installed
 
 ### Generate aenigma-specific DHparam file
 
