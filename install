@@ -1271,7 +1271,7 @@ clear
 
 ### Set installation complete checkfile with installed version
 
-cp $conf_dir/version_initiated $conf_dir/version_installed
+cp $conf_dir/version/version_initiated $conf_dir/version/version_installed
 
 ### Generate aenigma-specific DHparam file
 
