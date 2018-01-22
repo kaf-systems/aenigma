@@ -1428,7 +1428,7 @@ echo
 echo "${b}Finished removing installer directory...${x}"
 echo
 
-rm -r aenigma/
+rm -r $source_dir
 
 echo "${g}${b}aenigma installation complete!${x}"
 echo
