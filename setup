@@ -40,12 +40,10 @@ then
         echo "[delete the | $conf_dir/beta | file to cancel your opt-in to bleeding-edge versions]"
         echo
         echo "- * - !!! - * - !!! - * - !!! - * - !!! - * - !!! - * - !!! - * - !!! - * - !!! -"
-        echo "bleeding_edge $now" > "$conf_dir"/version_initiated
         ( cd $source_dir && bash ./install --return-check )
 else
         echo "Installing $short_name v$latest_vers"
         echo
-        echo "$latest_vers" > "$conf_dir"/version_initiated
 	( cd $source_dir && git checkout tags/v$latest_vers && bash ./install --return-check )
 fi
 
