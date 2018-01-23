@@ -2,6 +2,12 @@
 
 ################################################################################
 
+### Source openspace functions file
+
+source_os_functions
+
+################################################################################
+
 if [[ "${@#--return-check}" = "$@" ]]
 then
         echo "${r}${b}This script must not be run directly.${x}"
