@@ -21,7 +21,18 @@ check_root
 
 ### Download and source openspace functions file
 
-download_os_functions
+while getopts ":b" arguments; do
+    case $arguments in
+        b)	bleeding_edge="-b"
+                ;;
+        \?)	echo "${r}${b}Invalid option | -$OPTARG | for function | ${FUNCNAME[0]} |.${x}"
+                echo
+                exit
+                ;;
+    esac
+done
+
+download_os_functions ${bleeding_edge-}
 source_os_functions
 
 ### Define formatting
