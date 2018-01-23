@@ -24,11 +24,13 @@ check_root
 while getopts ":b" arguments; do
     case $arguments in
         b)	bleeding_edge="-b"
-                ;;
-        \?)	echo "${r}${b}Invalid option | -$OPTARG | for function | ${FUNCNAME[0]} |.${x}"
-                echo
-                exit
-                ;;
+            echo "Using bleeding_edge bash_functions as per | -b |."
+            echo
+            ;;
+        \?)	echo "Invalid option | -$OPTARG | for function | ${FUNCNAME[0]} |."
+            echo
+            exit
+            ;;
     esac
 done
 

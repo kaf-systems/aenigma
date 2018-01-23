@@ -43,7 +43,7 @@ download_os_functions() {
 		case $arguments in
 			b)	bleeding_edge="y"
 				;;
-			\?)	echo "${r}${b}Invalid option | -$OPTARG | for function | ${FUNCNAME[0]} |.${x}"
+			\?)	echo "Invalid option | -$OPTARG | for function | ${FUNCNAME[0]} |."
 				echo
 				exit
 				;;
