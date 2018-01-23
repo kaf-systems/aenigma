@@ -1040,7 +1040,7 @@ echo
 
 ### Add backup script to crontab
 
-os-add_cron_job -n ee-br-backup -t "8 4 * * * " -c "bash /root/openspace42/$short_name/$short_name-backup"
+os-add_cron_job -n ee-br-backup -t "8 4 * * * " -c "bash /root/openspace42/$short_name/tools/$short_name-backup"
 
 ### Install SSLH
 
@@ -1052,21 +1052,20 @@ apt-get -y install libwrap0-dev libconfig8-dev || true
 rm -r $tmp_dir/sslh &> /dev/null || true
 git clone https://github.com/yrutschle/sslh $tmp_dir/sslh
 ( cd $tmp_dir/sslh && make install && make && cp sslh-select /usr/local/sbin/sslh )
-#mkdir -p /etc/sslh/
-sed -i "s|this_ipv4-var|${this_ipv4}|g" $source_dir/conf/sslh/etc-sslh-v1.18
+sed -i "s|this_ipv4-var|${this_ipv4}|g" $source_dir/conf/sslh/etc-sslh.cfg
 if [ $ipv6_avail = "y" ]
 then
-	sed -i "s|#ipv6_comma|,|g" $source_dir/conf/sslh/etc-sslh-v1.18
-	sed -i "s|#ipv6_line||g" $source_dir/conf/sslh/etc-sslh-v1.18
-	sed -i "s|this_ipv6-var|${this_ipv6}|g" $source_dir/conf/sslh/etc-sslh-v1.18
+	sed -i "s|#ipv6_comma|,|g" $source_dir/conf/sslh/etc-sslh.cfg
+	sed -i "s|#ipv6_line||g" $source_dir/conf/sslh/etc-sslh.cfg
+	sed -i "s|this_ipv6-var|${this_ipv6}|g" $source_dir/conf/sslh/etc-sslh.cfg
 else
-	sed -i "s|#ipv6_comma||g" $source_dir/conf/sslh/etc-sslh-v1.18
-	sed -i "s|#ipv6_line|#|g" $source_dir/conf/sslh/etc-sslh-v1.18
+	sed -i "s|#ipv6_comma||g" $source_dir/conf/sslh/etc-sslh.cfg
+	sed -i "s|#ipv6_line|#|g" $source_dir/conf/sslh/etc-sslh.cfg
 fi
-sed -i "s|domain-var|${domain}|g" $source_dir/conf/sslh/etc-sslh-v1.18
-sed -i "s|ssh_port-var|${ssh_port}|g" $source_dir/conf/sslh/etc-sslh-v1.18
-cp $source_dir/conf/sslh/etc-sslh-v1.18 /etc/sslh.cfg
-cp $source_dir/conf/sslh/etc.init.d.sslh /etc/init.d/sslh
+sed -i "s|domain-var|${domain}|g" $source_dir/conf/sslh/etc-sslh.cfg
+sed -i "s|ssh_port-var|${ssh_port}|g" $source_dir/conf/sslh/etc-sslh.cfg
+cp $source_dir/conf/sslh/etc-sslh.cfg /etc/sslh.cfg
+cp $source_dir/conf/sslh/etc-init.d.sslh /etc/init.d/sslh
 chmod +x /etc/init.d/sslh
 update-rc.d sslh defaults
 systemctl daemon-reload
