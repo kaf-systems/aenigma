@@ -35,6 +35,8 @@ done
 download_os_functions ${bleeding_edge-}
 source_os_functions
 
+OPTIND=1
+
 ### Define formatting
 
 os-define_formatting

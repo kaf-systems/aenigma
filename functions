@@ -61,6 +61,8 @@ download_os_functions() {
 	mkdir -p $base_dir
 	( cd $base_dir && git clone https://github.com/$clone_author/$clone_name && cd $clone_name && if [ ! ${bleeding_edge-null} = "y" ]; then git checkout tags/v$os_bash_functions_version; fi &> /dev/null )
 
+	OPTIND=1
+
 }
 
 source_os_functions() {
