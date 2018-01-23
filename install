@@ -1156,7 +1156,9 @@ fi
 
 echo "${b}Now updating ejabberd's module repo...${x}"
 echo
+set +e
 /usr/sbin/ejabberdctl modules_update_specs
+set -e
 echo "${b}Finished updating ejabberd's module repo...${x}"
 echo
 
