@@ -2,6 +2,18 @@
 
 ################################################################################
 
+define_vars() {
+
+	proj_name="aenigma"
+	short_name="aenigma"
+	author_name="openspace42"
+
+	os-define_vars
+
+}
+
+################################################################################
+
 check_root() {
 
 	if [[ $EUID -ne 0 ]]
@@ -17,6 +29,8 @@ check_root() {
 
 download_os_functions() {
 
+	os_bash_functions_version=0.1.0
+
 	base_dir=/root/openspace42
 	clone_name=bash_functions
 	clone_dir=$base_dir/$clone_name
@@ -25,7 +39,7 @@ download_os_functions() {
 		rm -r ${clone_dir:?}
 	fi
 	mkdir -p $base_dir
-	( cd $base_dir && git clone https://github.com/openspace42/$clone_name &> /dev/null )
+	( cd $base_dir && git clone https://github.com/openspace42/$clone_name && cd $clone_name && git checkout tags/v$os_bash_functions_version &> /dev/null )
 
 }
 
@@ -35,18 +49,6 @@ source_os_functions() {
 	do
 		. $f
 	done
-
-}
-
-################################################################################
-
-define_vars() {
-
-	proj_name="aenigma"
-	short_name="aenigma"
-	author_name="openspace42"
-
-	os-define_vars
 
 }
 

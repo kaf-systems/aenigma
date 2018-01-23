@@ -1,34 +1,5 @@
 #!/bin/bash
 
-# Set bash environment error management
-
-set -e
-set -u
-
-# Source local functions file
-
-source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-. $source_dir/functions
-
-# Check for root user runtime
-
-check_root
-
-################################################################################
-
-# Download and source openspace functions file
-
-download_os_functions
-source_os_functions
-
-################################################################################
-
-os-define_formatting
-
-define_vars
-
-echo
-
 ################################################################################
 
 if [[ "${@#--return-check}" = "$@" ]]
@@ -1266,24 +1237,8 @@ fi
 read -rp "${b}[press enter to continue reading...]${x}"
 clear
 
-### Set installation complete checkfile with installed version
-
-cp $conf_dir/version/version_initiated $conf_dir/version/version_installed
-
 ### Generate aenigma-specific DHparam file
 
 os-generate_project_specific_dhparam
 
-### Remove installer directory
-
-echo "${b}Now removing installer directory...${x}"
-echo
-echo "Run ${b}git clone https://github.com/openspace42/aenigma${x} once again to download the latest installer!"
-echo
-echo "${b}Finished removing installer directory...${x}"
-echo
-
-rm -r $source_dir
-
-echo "${g}${b}aenigma installation complete!${x}"
-echo
+install_complete=y
