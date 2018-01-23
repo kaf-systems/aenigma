@@ -12,7 +12,6 @@ set -u
 echo
 source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $source_dir/functions
-echo
 
 ### Check for root user runtime
 
@@ -30,6 +29,8 @@ os-define_formatting
 ### Define variables
 
 define_vars
+
+################################################################################
 
 ### Actually run the installer
 

@@ -17,6 +17,14 @@ source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source_os_functions
 
+### Define formatting
+
+os-define_formatting
+
+### Define variables
+
+define_vars
+
 ################################################################################
 
 if [[ "${@#--return-check}" = "$@" ]]
