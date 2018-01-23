@@ -23,7 +23,13 @@ check_root
 download_os_functions
 source_os_functions
 
-################################################################################
+### Define formatting
+
+os-define_formatting
+
+### Define variables
+
+define_vars
 
 ### Actually run the installer
 
