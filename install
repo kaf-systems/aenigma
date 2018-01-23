@@ -2,6 +2,12 @@
 
 ################################################################################
 
+### Source local functions file
+
+echo
+source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. $source_dir/functions
+
 ### Source openspace functions file
 
 source_os_functions
