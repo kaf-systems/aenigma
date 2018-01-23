@@ -1,5 +1,8 @@
 #!/bin/bash
 
+short_name="aenigma"
+author_name="openspace42"
+
 # Set bash environment error management
 
 set -e
@@ -26,8 +29,7 @@ source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ### Define latest version
 export latest_vers="$(grep 'refs/tags/' $source_dir/.git/packed-refs | tail -1 | awk '{print $2}' | sed "s|refs/tags/v||g")"
 
-short_name="aenigma"
-base_dir=/root/openspace42
+base_dir=/root/$author_name
 install_dir=$base_dir/$short_name
 conf_dir=$install_dir/conf
 

@@ -27,8 +27,6 @@ os-define_formatting
 
 define_vars
 
-mkdir -p $conf_dir
-
 echo
 
 ################################################################################
@@ -1040,7 +1038,7 @@ echo
 
 ### Add backup script to crontab
 
-os-add_cron_job -n ee-br-backup -t "8 4 * * * " -c "bash /root/openspace42/$short_name/tools/$short_name-backup"
+os-add_cron_job -n $short_name-backup -t "8 4 * * * " -c "bash /root/openspace42/$short_name/tools/$short_name-backup"
 
 ### Install SSLH
 
