@@ -235,19 +235,19 @@ echo "----------------"
 echo
 echo "${b}To make sure everything is correct:${x}"
 echo
-echo "${b}1] Your XMPP domain [the part after the @ in your XMPP account addresses] will be:${x}"
+echo "1] Your ${b}XMPP domain${x} [the part after the @ in your XMPP account addresses] will be:"
 echo
 echo "${b} | ${g}$domain${x}${b} | ${x}"
 echo
-echo "${b}2] And therefore an XMPP account address will look as follows:${x}"
+echo "2] And therefore an ${b}XMPP account address${x} will look as follows:"
 echo
 echo "${b} | ${g}mark@$domain${x}${b} | ${x}"
 echo
-echo "${b}3] Your hostname, the location on the internet of this server, will be:${x}"
+echo "3] Your ${b}hostname${x}, the location on the internet of this server, will be:"
 echo
 echo "${b} | ${g}$hostname${x}${b} | ${x}"
 echo
-echo "${b}4] And therefore your aenigma admin panel will be located at:${x}"
+echo "4] And therefore your ${b}aenigma admin panel${x} will be located at:"
 echo
 echo "${b} | ${g}https://$hostname${x}${b} | ${x}"
 echo
