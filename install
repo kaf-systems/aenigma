@@ -118,7 +118,7 @@ then
 
         echo "${b}Now set your top level domain, which will also be the part after the @ in your XMPP account addresses:${x}"
         echo
-        
+
     }
 
     os-set_option -o domain -v n -d y -p xmpp
@@ -235,21 +235,21 @@ echo "----------------"
 echo
 echo "${b}To make sure everything is correct:${x}"
 echo
-echo "1] Your XMPP domain [the part after the @ in your XMPP account addresses] will be:"
+echo "${b}1] Your XMPP domain [the part after the @ in your XMPP account addresses] will be:${x}"
 echo
-echo "${b} | $domain | ${x}"
+echo "${b} | ${g}$domain${x}${b} | ${x}"
 echo
-echo "2] And therefore an XMPP account address will look as follows:"
+echo "${b}2] And therefore an XMPP account address will look as follows:${x}"
 echo
-echo "${b} | mark@$domain | ${x}"
+echo "${b} | ${g}mark@$domain${x}${b} | ${x}"
 echo
-echo "3] Your hostname, the location on the internet of this server, will be:"
+echo "${b}3] Your hostname, the location on the internet of this server, will be:${x}"
 echo
-echo "${b} | $hostname | ${x}"
+echo "${b} | ${g}$hostname${x}${b} | ${x}"
 echo
-echo "4] And therefore your aenigma admin panel will be located at:"
+echo "${b}4] And therefore your aenigma admin panel will be located at:${x}"
 echo
-echo "${b} | https://$hostname | ${x}"
+echo "${b} | ${g}https://$hostname${x}${b} | ${x}"
 echo
 echo "----------------"
 echo
