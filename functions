@@ -24,9 +24,9 @@ check_root() {
 	then
 		echo "${r}${b}This script must be run as root${x}"
 		echo
-	        echo "${b}Exiting...${x}"
-	        echo
-	        exit 1
+		echo "${b}Exiting...${x}"
+		echo
+		exit 1
 	fi
 
 }
@@ -123,46 +123,46 @@ aenigma_xmpp_intro() {
 
 aenigma-add_ejabberd_repo() {
 
-        currdistro="$(lsb_release --codename | cut -f2)"
-        apt-get -y install apt-transport-https || true
-        echo "deb https://apt.jabber.at $currdistro ejabberd" > /etc/apt/sources.list.d/jabber.at.list
-        wget -qO- https://apt.jabber.at/gpg-key | apt-key add -
-        apt-get update
+	currdistro="$(lsb_release --codename | cut -f2)"
+	apt-get -y install apt-transport-https || true
+	echo "deb https://apt.jabber.at $currdistro ejabberd" > /etc/apt/sources.list.d/jabber.at.list
+	wget -qO- https://apt.jabber.at/gpg-key | apt-key add -
+	apt-get update
 
 }
 
 aenigma-install_ejabberd_config() {
 
-        echo "${b}Now creating ejabberd directory and setting custom aenigma config to /etc/ejabberd/ejabberd.yml...${x}"
-        echo
+	echo "${b}Now creating ejabberd directory and setting custom aenigma config to /etc/ejabberd/ejabberd.yml...${x}"
+	echo
 
-        ejab_cand_vers="$(apt-cache show ejabberd | grep Version | head -1 | sed "s|Version: ||" | cut -d ':' -f 2 | cut -f1 -d'-')"
+	ejab_cand_vers="$(apt-cache show ejabberd | grep Version | head -1 | sed "s|Version: ||" | cut -d ':' -f 2 | cut -f1 -d'-')"
 
-        source_ejab_conf_file="$source_dir/conf/ejabberd/ejabberd-$ejab_cand_vers.yml"
+	source_ejab_conf_file="$source_dir/conf/ejabberd/ejabberd-$ejab_cand_vers.yml"
 
-        if [ ! -f $source_ejab_conf_file ]
-        then
-                ### Fallback to ejabberd.yml for v17.08 in case the ejabberd candidate install version isn't among the ones we have config files for
-                source_ejab_conf_file="$source_dir/conf/ejabberd/ejabberd-17.08.yml"
-        fi
+	if [ ! -f $source_ejab_conf_file ]
+	then
+		### Fallback to ejabberd.yml for v17.08 in case the ejabberd candidate install version isn't among the ones we have config files for
+		source_ejab_conf_file="$source_dir/conf/ejabberd/ejabberd-17.08.yml"
+	fi
 
-        mkdir -p /etc/ejabberd/
-        touch /etc/ejabberd/ejabberd.yml
-        sed -i "s/example.im/${domain}/g" "$source_ejab_conf_file"
-        sed -i "s/hostname.im/${hostname}/g" "$source_ejab_conf_file"
-        if [ $config_option = 1 ]
-        then
-        sed -i "s|example.im|${domain}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt
-        sed -i "s|pathtofile|${domtlscertloc}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt
-        sed -i '/## aenigma_host_config_domain_placeholder_start:/,/## aenigma_host_config_domain_placeholder_end:/{//!d}' $source_dir/conf/ejabberd/ejabberd.yml
-        sed -i "/## aenigma_host_config_domain_placeholder_start:/ r $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt" $source_dir/conf/ejabberd/ejabberd.yml
-        fi
-        #sed -i "s|example.im|xu.${domain}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-xu.txt
-        #sed -i "s|pathtofile|${tlsdir}/xu.pem|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-xu.txt
-        #sed -i '/## aenigma_host_config_xu_placeholder_start:/,/## aenigma_host_config_xu_placeholder_end:/{//!d}' $source_dir/conf/ejabberd/ejabberd.yml
-        #sed -i "/## aenigma_host_config_xu_placeholder_start:/ r $source_dir/conf/ejabberd/ejabberd-tlsaddition-xu.txt" $source_dir/conf/ejabberd/ejabberd.yml
-        cp "$source_ejab_conf_file" /etc/ejabberd/ejabberd.yml
-        echo "${b}Finished creating ejabberd directory and setting custom aenigma config to /etc/ejabberd/ejabberd.yml.${x}"
-        echo
+	mkdir -p /etc/ejabberd/
+	touch /etc/ejabberd/ejabberd.yml
+	sed -i "s/example.im/${domain}/g" "$source_ejab_conf_file"
+	sed -i "s/hostname.im/${hostname}/g" "$source_ejab_conf_file"
+	if [ $config_option = 1 ]
+	then
+		sed -i "s|example.im|${domain}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt
+		sed -i "s|pathtofile|${domtlscertloc}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt
+		sed -i '/## aenigma_host_config_domain_placeholder_start:/,/## aenigma_host_config_domain_placeholder_end:/{//!d}' $source_dir/conf/ejabberd/ejabberd.yml
+		sed -i "/## aenigma_host_config_domain_placeholder_start:/ r $source_dir/conf/ejabberd/ejabberd-tlsaddition-domain.txt" $source_dir/conf/ejabberd/ejabberd.yml
+	fi
+	#sed -i "s|example.im|xu.${domain}|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-xu.txt
+	#sed -i "s|pathtofile|${tlsdir}/xu.pem|g" $source_dir/conf/ejabberd/ejabberd-tlsaddition-xu.txt
+	#sed -i '/## aenigma_host_config_xu_placeholder_start:/,/## aenigma_host_config_xu_placeholder_end:/{//!d}' $source_dir/conf/ejabberd/ejabberd.yml
+	#sed -i "/## aenigma_host_config_xu_placeholder_start:/ r $source_dir/conf/ejabberd/ejabberd-tlsaddition-xu.txt" $source_dir/conf/ejabberd/ejabberd.yml
+	cp "$source_ejab_conf_file" /etc/ejabberd/ejabberd.yml
+	echo "${b}Finished creating ejabberd directory and setting custom aenigma config to /etc/ejabberd/ejabberd.yml.${x}"
+	echo
 
 }
