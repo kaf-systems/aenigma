@@ -44,6 +44,9 @@ then
         exit 1
 fi
 
+echo "${b}Initiating install...${x}"
+echo
+
 ################################################################################
 
 os-check_sslh_connection
@@ -53,9 +56,6 @@ os-check_distro_ubuntu16
 os-check_dfbs_run
 
 ################################################################################
-
-echo "${b}Initiating installer...${x}"
-echo
 
 os-apt_full_upgrade -e
 
