@@ -27,6 +27,10 @@ os-define_formatting
 
 define_vars
 
+### Check for any already existing installation
+
+os-check_install_version
+
 ################################################################################
 
 if [[ "${@#--return-check}" = "$@" ]]
@@ -47,10 +51,6 @@ os-check_sslh_connection
 os-check_distro_ubuntu16
 
 os-check_dfbs_run
-
-################################################################################
-
-os-check_install_version
 
 ################################################################################
 
