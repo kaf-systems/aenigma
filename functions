@@ -165,3 +165,13 @@ aenigma-install_ejabberd_config() {
 	echo
 
 }
+
+backup_locally_loop() {
+
+	/usr/sbin/ejabberdctl backup /tmp/ejabberd-mnesia-backup
+	mv /tmp/ejabberd-mnesia-backup "$tmp_backup_dir"/ejabberd-mnesia-backup
+	cp -r /etc/ejabberd/ "$tmp_backup_dir"/etc-ejabberd/
+	cp -r /var/lib/ejabberd/ "$tmp_backup_dir"/var-lib-ejabberd/
+	cp -r "$conf_dir" "$tmp_backup_dir"/config/
+
+}
