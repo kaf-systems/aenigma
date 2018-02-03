@@ -1,6 +1,6 @@
 #!/bin/bash
 
-### openspace bash installer v0.1.0 [https://github.com/openspace42/bash_installer]
+### openspace Bash-Framework v0.1.0 [https://github.com/openspace42/Bash-Framework]
 
 os_bash_functions_version=0.1.2
 
@@ -173,5 +173,162 @@ backup_locally_loop() {
 	cp -r /etc/ejabberd/ "$tmp_backup_dir"/etc-ejabberd/
 	cp -r /var/lib/ejabberd/ "$tmp_backup_dir"/var-lib-ejabberd/
 	cp -r "$conf_dir" "$tmp_backup_dir"/config/
+
+}
+
+restore_loop() {
+
+	echo "${b}1] Now restoring aenigma config directory...${x}"
+	echo
+
+	rsync -aAXx --delete $restorefileloc/config/ $configdir/
+
+	echo "${b}2] Now restoring ejabberd database...${x}"
+	echo
+
+	if (( $(ps -ef | grep -v grep | grep ejabberd | wc -l) > 0 ))
+	then
+	        echo "${g}${b}ejabberd is already running. Continuing...${x}"
+	        echo
+	else
+	        echo "${r}${b}ejabberd NOT running. Starting it now...${x}"
+	        echo
+	        echo "${b}Now starting ejabberd ...${x}"
+	        /usr/sbin/service ejabberd start
+	        echo
+	        sleep 8
+	        /usr/sbin/ejabberdctl
+	        echo
+	        sleep 1
+	fi
+
+	if (( $(ps -ef | grep -v grep | grep ejabberd | wc -l) > 0 ))
+	then
+	        cd $restorefileloc
+		cp ./ejabberd-mnesia-backup /var/lib/ejabberd/
+	        /usr/sbin/ejabberdctl restore ejabberd-mnesia-backup
+		rm /var/lib/ejabberd/ejabberd-mnesia-backup
+	        echo "${b}Successfully restored ejabberd database...${x}"
+	        echo
+	        sleep 8
+	else
+	        echo "${r}${b}ERROR: ejabberd STILL NOT running. Unable to restore database from backup.${x}"
+	        echo
+	        echo "${b}Exiting...${x}"
+	        echo
+	        exit
+	fi
+
+	echo "${b}Now restoring ejabberd directories...${x}"
+	echo
+
+	echo "${b}Now stopping ejabberd for directory restore...${x}"
+	echo
+	/usr/sbin/service ejabberd stop
+	sleep 8
+
+	echo "${b}3] Now syncing ejabberd directories...${x}"
+	echo
+
+	rsync -aAXx --delete $restorefileloc/etc-ejabberd/ /etc/ejabberd/
+	rsync -aAXx --delete $restorefileloc/var-lib-ejabberd/ /var/lib/ejabberd/
+
+	echo "${b}Now setting permissions on ejabberd directories...${x}"
+	echo
+
+	chown -R ejabberd:ejabberd /etc/ejabberd/
+	chown -R ejabberd:ejabberd /var/lib/ejabberd/
+
+	echo "${b}Now starting ejabberd...${x}"
+	/usr/sbin/service ejabberd start
+	echo
+	sleep 16
+	/usr/sbin/ejabberdctl status
+	echo
+	sleep 1
+
+	if (( $(ps -ef | grep -v grep | grep ejabberd | wc -l) > 0 ))
+	then
+
+	        echo "${g}${b}Restore complete!${x}"
+	        echo
+	        echo "${b}Now please verify your aenigma instance is running correctly and has everything you except it to.${x}"
+	        echo
+
+	        read -p "${b}Has your previous instance of aenigma been restored correctly? (Y/n): ${x}" -n 1 -r
+	        echo
+	        if [[ ! $REPLY =~ ^[Nn]$ ]]
+	        then
+	                echo "${g}${b}Ok, all done!${x}"
+	                echo
+	                if [ -f $configdir/blocks3backups ]
+	                then
+				rm $configdir/blocks3backups
+	                        echo "${b}Removing S3 backups lock since your restore has been successful.${x}"
+	                        echo
+	                        echo "${r}${b}This machine will now pick up where the old one left off and start backing up again to S3 and will overwrite all previous data stored on S3.${x}"
+	                        echo
+	                        echo "${b}If you've changed your mind and are NOT yet sure this restore was completely successful, simply:${x}"
+	                        echo
+	                        echo "${b} | touch $configdir/blocks3backups |"
+	                        echo
+	                        echo "${b}And remember to remove it as soon as you're done verifying this restored instance to then resume backups to S3!${x}"
+	                        echo
+	                        echo "${g}${b}All done for now.${x}"
+	                        echo
+	                fi
+	        else
+	                echo
+	                echo "${b}Sorry about that, please collect all evidence you can find so and simply file an issue report at:${x}"
+	        	echo
+	        	echo "${b} | https://github.com/openspace42/aenigma/issues |${x}"
+	        	echo
+	        	echo "${b}Thank you in advance!${x}"
+	                echo
+	        fi
+
+	else
+
+	        echo "${r}${b}ERROR: ejabberd not running after restore. Please check ejabberd directories.${x}"
+	        echo
+	        echo "${b}Please collect all evidence you can find so and simply file an issue report at:${x}"
+	        echo
+	        echo "${b} | https://github.com/openspace42/aenigma/issues |${x}"
+	        echo
+	        echo "${b}Thank you in advance!${x}"
+	        echo
+	        echo "${b}Exiting...${x}"
+	        echo
+	        exit
+
+	fi
+
+	if [ -d "$restoresdir/local/" ]
+	then
+		rm -r "$restoresdir/local/"
+	fi
+
+	if [ -d "/root/$shortname-restore/" ]
+	then
+		rm -r "/root/$shortname-restore/"
+	fi
+
+	if [ -d "$tmpdir" ]
+	then
+		rm -r "${tmpdir:?}"
+	fi
+
+	if [ $bootstrapmode = "on" ]
+	then
+		echo "${b}Now that we're finished with the initial restore, it's time to re-run the install script and get this machine up and running with your old instance's files and settings${x}"
+		echo
+		echo "${b}Running install script now.${x}"
+		echo
+		echo "${r}${b}Should you exit the install script during its runtime, you can re-run it manually with:${x}"
+		echo
+		echo "${b} | bash $sourcedir/install.sh | ${x}"
+		cd
+		bash $sourcedir/install.sh
+	fi
 
 }
